@@ -6,6 +6,7 @@ import CandlestickWithVolume, {
   CandlePoint,
 } from "@/components/CandlestickWithVolume";
 import BuyRatioSelector from "@/components/BuyRatioSelector";
+import { START_BANKROLL } from "@/lib/gameMath";
 
 type Mode = "train" | "daily";
 
@@ -58,12 +59,13 @@ export default function PlayClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [buyRatio, setBuyRatio] = useState(0.25);
+  const [selectedRatio, setSelectedRatio] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [answerFeedback, setAnswerFeedback] = useState<AnswerResponse | null>(
     null
   );
   const [finishing, setFinishing] = useState(false);
+  const [cumProfit, setCumProfit] = useState(0);
 
   useEffect(() => {
     let canceled = false;
@@ -137,8 +139,10 @@ export default function PlayClient() {
     if (!runState) return "-";
     return `${currentIndex + 1} / ${runState.questions.length}`;
   }, [currentIndex, runState]);
+  const currentBankroll = START_BANKROLL + cumProfit;
+  const currentReturnPct = (cumProfit / START_BANKROLL) * 100;
 
-  async function submitAnswer() {
+  async function submitAnswer(buyRatio: number) {
     if (!runState || !currentQuestion) return;
     try {
       setSubmitting(true);
@@ -157,7 +161,9 @@ export default function PlayClient() {
       if (!res.ok) {
         throw new Error(data?.message ?? "提交答案失败");
       }
-      setAnswerFeedback(data as AnswerResponse);
+      const feedback = data as AnswerResponse;
+      setAnswerFeedback(feedback);
+      setCumProfit(feedback.cum_profit_after);
     } catch (e) {
       setError(e instanceof Error ? e.message : "提交失败");
     } finally {
@@ -165,11 +171,18 @@ export default function PlayClient() {
     }
   }
 
+  function handleSelectOption(value: number) {
+    if (submitting || finishing || answerFeedback) return;
+    setSelectedRatio(value);
+    void submitAnswer(value);
+  }
+
   async function handleModalConfirm() {
     if (!runState) return;
 
     if (!isLast) {
       setAnswerFeedback(null);
+      setSelectedRatio(null);
       setCurrentIndex((prev) => prev + 1);
       return;
     }
@@ -225,7 +238,8 @@ export default function PlayClient() {
     <div className="stack">
       <h1>做题页</h1>
       <p>
-        模式：{runState.mode} | 进度：{progressText}
+        进度：{progressText} | 总资产：{currentBankroll.toFixed(2)} | 收益率：
+        {currentReturnPct.toFixed(2)}%
       </p>
 
       <div className="card">
@@ -233,19 +247,12 @@ export default function PlayClient() {
       </div>
 
       <div className="card stack">
-        <div>选择买入比例</div>
+        <div>交易选择（买入 / 不买，点击即提交）</div>
         <BuyRatioSelector
-          value={buyRatio}
-          onChange={setBuyRatio}
-          disabled={submitting || finishing}
+          value={selectedRatio}
+          onChange={handleSelectOption}
+          disabled={submitting || finishing || Boolean(answerFeedback)}
         />
-        <button
-          type="button"
-          onClick={submitAnswer}
-          disabled={submitting || finishing}
-        >
-          {submitting ? "提交中..." : "提交答案"}
-        </button>
       </div>
 
       {error ? <div className="error-text">{error}</div> : null}

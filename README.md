@@ -108,7 +108,9 @@
   - 按 `total_return_pct desc` 返回前 100
 - 前端联调：
   - 首页两个按钮直接调用 `start` 启动 run
-  - `play` 页完成 K 线+量渲染、仓位选择、提交答案、反馈弹层与下一题
+  - `play` 页完成价格K线主图 + 成交量副图（独立小图与独立纵轴）渲染
+  - `play` 页答题改为二选一：`买入 / Buy` 与 `不买 / Hold`，无默认选中，点击即提交
+  - `play` 页顶部显示进度、当前总资产、当前收益率
   - 最后一题后调用 `finish` 并跳转 `result/[runId]`
   - `result` 页展示收益曲线（Y 轴含 0）、收益率、总收益、评语
   - `leaderboard` 页调用 `/api/leaderboard` 展示 Top100（收益率、总收益、盈利题数）
@@ -171,6 +173,21 @@ export function getSingaporeDateKey(date = new Date()): string {
 2. 在 `/Users/haitao/Documents/Newproject` 目录执行 `npm install`。
 3. 复制 `.env.example` 为 `.env.local` 并填写环境变量。
 4. 启动开发服务器：`npm run dev`。
+
+## 前端交互注意事项（最新）
+- 做题页仅保留两个选择：`买入 / Buy` 与 `不买 / Hold`。
+- 做题页每题默认无选中态；点击任一选项即提交，不再需要“提交答案”确认按钮。
+- 做题页顶部显示：进度、当前总资产、当前收益率（不再显示 mode）。
+- K线与成交量已拆分为上下两个图：
+  - 上方为价格K线主图
+  - 下方为成交量副图（独立纵轴），并与主图时间范围联动
+
+## 常见问题排查
+- 若出现 `Cannot find module './331.js'`（或类似 chunk 缺失）：
+  1. 停掉当前 dev 进程
+  2. 删除构建缓存：`rm -rf .next`
+  3. 重新启动：`npm run dev`
+- 若仍异常，可先验证生产构建：`npm run build`，再重新执行 `npm run dev`。
 
 ## 环境变量说明
 - `NEXT_PUBLIC_SUPABASE_URL`：Supabase 项目 URL

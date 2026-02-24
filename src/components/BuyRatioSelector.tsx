@@ -1,9 +1,12 @@
 "use client";
 
-const RATIOS = [0.1, 0.25, 0.5, 1] as const;
+const OPTIONS = [
+  { value: 1, label: "买入 / Buy" },
+  { value: 0, label: "不买 / Hold" },
+] as const;
 
 type Props = {
-  value: number;
+  value: number | null;
   onChange: (value: number) => void;
   disabled?: boolean;
 };
@@ -11,17 +14,17 @@ type Props = {
 export default function BuyRatioSelector({ value, onChange, disabled }: Props) {
   return (
     <div className="ratio-row">
-      {RATIOS.map((ratio) => {
-        const active = value === ratio;
+      {OPTIONS.map((option) => {
+        const active = value === option.value;
         return (
           <button
-            key={ratio}
+            key={option.value}
             type="button"
             className={`ratio-btn ${active ? "active" : ""}`}
-            onClick={() => onChange(ratio)}
+            onClick={() => onChange(option.value)}
             disabled={disabled}
           >
-            {(ratio * 100).toFixed(0)}%
+            {option.label}
           </button>
         );
       })}
