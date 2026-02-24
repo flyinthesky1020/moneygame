@@ -7,6 +7,10 @@ import CandlestickWithVolume, {
 } from "@/components/CandlestickWithVolume";
 import BuyRatioSelector from "@/components/BuyRatioSelector";
 import { START_BANKROLL } from "@/lib/gameMath";
+import { pickRandomPlayQuote } from "@/lib/playQuotes";
+import {
+  resolveRoundFeedbackText,
+} from "@/lib/playRoundFeedback";
 
 type Mode = "train" | "daily";
 
@@ -26,6 +30,12 @@ type AnswerResponse = {
   profit: number;
   cum_profit_after: number;
   bankroll_after: number;
+};
+
+type RoundFeedback = AnswerResponse & {
+  streak_comment: string;
+  return_comment: string;
+  unlocked_achievements: string[];
 };
 
 type FinishResponse = {
@@ -48,6 +58,44 @@ function isMode(v: string | null): v is Mode {
   return v === "train" || v === "daily";
 }
 
+function safeGetSession(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function clearRunStartCache() {
+  try {
+    const keysToDelete: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith("run_start:")) {
+        keysToDelete.push(key);
+      }
+    }
+    keysToDelete.forEach((key) => sessionStorage.removeItem(key));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function safeSetRunStart(runId: string, payload: StartResponse) {
+  const key = `run_start:${runId}`;
+  const value = JSON.stringify(payload);
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    clearRunStartCache();
+    try {
+      sessionStorage.setItem(key, value);
+    } catch {
+      // ignore if still exceeds quota
+    }
+  }
+}
+
 export default function PlayClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,11 +109,20 @@ export default function PlayClient() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedRatio, setSelectedRatio] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [answerFeedback, setAnswerFeedback] = useState<AnswerResponse | null>(
+  const [answerFeedback, setAnswerFeedback] = useState<RoundFeedback | null>(
     null
   );
   const [finishing, setFinishing] = useState(false);
   const [cumProfit, setCumProfit] = useState(0);
+  const [profitHistory, setProfitHistory] = useState<number[]>([]);
+  const [dailyQuote] = useState(() => pickRandomPlayQuote());
+
+  useEffect(() => {
+    document.body.classList.add("play-mode-body");
+    return () => {
+      document.body.classList.remove("play-mode-body");
+    };
+  }, []);
 
   useEffect(() => {
     let canceled = false;
@@ -75,8 +132,13 @@ export default function PlayClient() {
         setLoading(true);
         setError("");
 
+        if (runIdParam && runState?.run_id === runIdParam) {
+          if (!canceled) setLoading(false);
+          return;
+        }
+
         if (runIdParam) {
-          const raw = sessionStorage.getItem(`run_start:${runIdParam}`);
+          const raw = safeGetSession(`run_start:${runIdParam}`);
           if (raw) {
             const parsed = JSON.parse(raw) as StartResponse;
             if (!canceled) {
@@ -111,7 +173,7 @@ export default function PlayClient() {
         }
 
         const payload = data as StartResponse;
-        sessionStorage.setItem(`run_start:${payload.run_id}`, JSON.stringify(payload));
+        safeSetRunStart(payload.run_id, payload);
         router.replace(`/play?mode=${payload.mode}&run_id=${payload.run_id}`);
         if (!canceled) {
           setRunState(payload);
@@ -129,7 +191,7 @@ export default function PlayClient() {
     return () => {
       canceled = true;
     };
-  }, [modeParam, runIdParam, router]);
+  }, [modeParam, runIdParam, router, runState?.run_id]);
 
   const totalQuestions = runState?.questions.length ?? 0;
   const currentQuestion = runState?.questions[currentIndex] ?? null;
@@ -141,12 +203,14 @@ export default function PlayClient() {
   }, [currentIndex, runState]);
   const currentBankroll = START_BANKROLL + cumProfit;
   const currentReturnPct = (cumProfit / START_BANKROLL) * 100;
+  const modeTitle = runState?.mode === "daily" ? "韭皇竞技场" : "韭皇练习场";
 
   async function submitAnswer(buyRatio: number) {
     if (!runState || !currentQuestion) return;
     try {
       setSubmitting(true);
       setError("");
+      const bankrollBefore = START_BANKROLL + cumProfit;
 
       const res = await fetch("/api/run/answer", {
         method: "POST",
@@ -162,7 +226,21 @@ export default function PlayClient() {
         throw new Error(data?.message ?? "提交答案失败");
       }
       const feedback = data as AnswerResponse;
-      setAnswerFeedback(feedback);
+      const nextProfitHistory = [...profitHistory, feedback.profit];
+      const roundReturnPct = bankrollBefore > 0
+        ? (feedback.profit / bankrollBefore) * 100
+        : 0;
+      const { streakText, returnText } = resolveRoundFeedbackText({
+        profitHistory: nextProfitHistory,
+        roundReturnPct,
+      });
+      setProfitHistory(nextProfitHistory);
+      setAnswerFeedback({
+        ...feedback,
+        streak_comment: streakText,
+        return_comment: returnText,
+        unlocked_achievements: [],
+      });
       setCumProfit(feedback.cum_profit_after);
     } catch (e) {
       setError(e instanceof Error ? e.message : "提交失败");
@@ -236,18 +314,42 @@ export default function PlayClient() {
 
   return (
     <div className="stack">
-      <h1>做题页</h1>
-      <p>
-        进度：{progressText} | 总资产：{currentBankroll.toFixed(2)} | 收益率：
-        {currentReturnPct.toFixed(2)}%
-      </p>
+      <div className="page-head">
+        <h1 className="play-mode-title-text">{modeTitle}</h1>
+        <p className="page-subtitle play-mode-subtitle-text">{dailyQuote}</p>
+      </div>
+
+      <div className="metric-strip play-metric-strip">
+        <div className="metric-cell">
+          <span className="metric-label">进度</span>
+          <span className="metric-value">{progressText}</span>
+        </div>
+        <div className="metric-cell">
+          <span className="metric-label">当前总资产</span>
+          <span className="metric-value">{currentBankroll.toFixed(2)}</span>
+        </div>
+        <div className="metric-cell">
+          <span className="metric-label">收益率</span>
+          <span className="metric-value">{currentReturnPct.toFixed(2)}%</span>
+        </div>
+      </div>
 
       <div className="card">
         <CandlestickWithVolume candles={currentQuestion.candles} />
+        <p className="chart-attribution">
+          Charting library:
+          {" "}
+          <a
+            href="https://www.tradingview.com/lightweight-charts/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            TradingView Lightweight Charts
+          </a>
+        </p>
       </div>
 
       <div className="card stack">
-        <div>交易选择（买入 / 不买，点击即提交）</div>
         <BuyRatioSelector
           value={selectedRatio}
           onChange={handleSelectOption}
@@ -260,12 +362,50 @@ export default function PlayClient() {
       {answerFeedback ? (
         <div className="modal-mask">
           <div className="modal-card stack">
-            <h3>本题结果</h3>
-            <p>题号：{answerFeedback.index_in_run}</p>
-            <p>涨跌幅：{answerFeedback.r_pct.toFixed(4)}%</p>
-            <p>本题收益：{answerFeedback.profit.toFixed(2)}</p>
-            <p>累计收益：{answerFeedback.cum_profit_after.toFixed(2)}</p>
-            <p>当前资金：{answerFeedback.bankroll_after.toFixed(2)}</p>
+            <h3
+              className={
+                answerFeedback.profit > 0
+                  ? "profit-up"
+                  : answerFeedback.profit < 0
+                    ? "profit-down"
+                    : ""
+              }
+            >
+              {answerFeedback.return_comment}
+            </h3>
+            <p className="round-profit-mini">
+              本次收益：
+              <span
+                className={
+                  answerFeedback.profit > 0
+                    ? "profit-up"
+                    : answerFeedback.profit < 0
+                      ? "profit-down"
+                      : ""
+                }
+              >
+                {answerFeedback.profit.toFixed(2)}
+              </span>
+            </p>
+            <p className="round-profit-mini">
+              当日振幅：
+              <span
+                className={
+                  answerFeedback.r_pct > 0
+                    ? "profit-up"
+                    : answerFeedback.r_pct < 0
+                      ? "profit-down"
+                      : ""
+                }
+              >
+                {answerFeedback.r_pct > 0 ? "+" : ""}
+                {answerFeedback.r_pct.toFixed(2)}%
+              </span>
+            </p>
+            <p>{answerFeedback.streak_comment}</p>
+            {answerFeedback.unlocked_achievements.length > 0 ? (
+              <p>特殊成就解锁：{answerFeedback.unlocked_achievements.join("、")}</p>
+            ) : null}
             <button
               type="button"
               onClick={handleModalConfirm}

@@ -1,8 +1,8 @@
 "use client";
 
 const OPTIONS = [
-  { value: 1, label: "买入 / Buy" },
-  { value: 0, label: "不买 / Hold" },
+  { value: 1, label: "买入" },
+  { value: 0, label: "暂且不动" },
 ] as const;
 
 type Props = {
@@ -20,7 +20,7 @@ export default function BuyRatioSelector({ value, onChange, disabled }: Props) {
           <button
             key={option.value}
             type="button"
-            className={`ratio-btn ${active ? "active" : ""}`}
+            className={`ratio-btn ${option.value === 1 ? "ratio-btn-buy" : "ratio-btn-hold"} ${active ? "active" : ""}`}
             onClick={() => onChange(option.value)}
             disabled={disabled}
           >

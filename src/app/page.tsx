@@ -1,80 +1,200 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import styles from "./page.module.css";
 
-type Mode = "train" | "daily";
-
-type StartResponse = {
-  run_id: string;
-  mode: Mode;
-  date_key: string;
-  questions: Array<{
-    question_id: string;
-    candles: Array<{ o: number; h: number; l: number; c: number; v: number }>;
-  }>;
-};
+const STAGE_WIDTH = 390;
+const STAGE_HEIGHT = 844;
+const MOUTH_X = 196;
+const MOUTH_Y = 408;
 
 export default function HomePage() {
   const router = useRouter();
-  const [startingMode, setStartingMode] = useState<Mode | null>(null);
-  const [error, setError] = useState<string>("");
+  const [scale, setScale] = useState(1);
+  const [transitioning, setTransitioning] = useState(false);
+  const [debug, setDebug] = useState(false);
 
-  async function startRun(mode: Mode) {
-    try {
-      setError("");
-      setStartingMode(mode);
-
-      const res = await fetch("/api/run/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode }),
-      });
-
-      const data = await res.json();
-      if (res.status === 409 && data?.existing_run_id) {
-        router.push(`/result/${data.existing_run_id}`);
-        return;
-      }
-      if (!res.ok) {
-        setError(data?.message ?? "启动失败");
-        return;
-      }
-
-      const payload = data as StartResponse;
-      sessionStorage.setItem(
-        `run_start:${payload.run_id}`,
-        JSON.stringify(payload)
+  useEffect(() => {
+    const updateScale = () => {
+      const nextScale = Math.min(
+        window.innerWidth / STAGE_WIDTH,
+        window.innerHeight / STAGE_HEIGHT
       );
-      router.push(`/play?mode=${payload.mode}&run_id=${payload.run_id}`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "启动失败");
-    } finally {
-      setStartingMode(null);
-    }
+      setScale(nextScale);
+    };
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === "d") {
+        setDebug((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const stageStyle = useMemo(
+    () =>
+      ({
+        "--runtime-scale": scale,
+        transform: `scale(${scale})`,
+      }) as CSSProperties,
+    [scale]
+  );
+
+  async function enterDaily() {
+    if (transitioning) return;
+    setTransitioning(true);
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    router.push("/daily");
+  }
+
+  function navigate(path: "/train" | "/record" | "/team") {
+    if (transitioning) return;
+    router.push(path);
   }
 
   return (
-    <div className="stack">
-      <h1>虚拟交易游戏</h1>
-      <p>请选择模式开始。</p>
-      <div className="row">
-        <button
-          type="button"
-          onClick={() => startRun("train")}
-          disabled={startingMode !== null}
+    <div className={styles.viewport}>
+      <div
+        className={`${styles.stageScale} ${transitioning ? styles.sink : ""}`}
+        style={stageStyle}
+      >
+        <div
+          className={styles.stage}
+          style={{ transformOrigin: `${MOUTH_X}px ${MOUTH_Y}px` }}
         >
-          {startingMode === "train" ? "启动中..." : "训练模式（10题）"}
-        </button>
-        <button
-          type="button"
-          onClick={() => startRun("daily")}
-          disabled={startingMode !== null}
-        >
-          {startingMode === "daily" ? "启动中..." : "每日挑战（50题）"}
-        </button>
+          <div className={styles.bg} />
+
+          <div
+            className={`${styles.layer} ${styles.titleLayer} ${
+              debug ? styles.debug : ""
+            }`}
+          >
+            <Image
+              src="/assets/title_block.webp"
+              alt="title block"
+              fill
+              sizes="390px"
+              priority
+            />
+          </div>
+
+          <div
+            className={`${styles.layer} ${styles.characterLayer} ${
+              debug ? styles.debug : ""
+            }`}
+          >
+            <Image
+              src="/assets/character_daily.webp"
+              alt="character and daily tag"
+              fill
+              sizes="390px"
+              priority
+            />
+          </div>
+
+          <div
+            className={`${styles.layer} ${styles.leaderboardLayer} ${
+              debug ? styles.debug : ""
+            }`}
+          >
+            <Image
+              src="/assets/leaderboard.webp"
+              alt="leaderboard board"
+              fill
+              sizes="390px"
+            />
+          </div>
+
+          <button
+            type="button"
+            className={`${styles.menuBtn} ${styles.trainingBtn} ${
+              debug ? styles.debug : ""
+            }`}
+            onClick={() => navigate("/train")}
+            disabled={transitioning}
+            aria-label="训练模式"
+          >
+            <Image
+              src="/assets/btn_training.webp"
+              alt=""
+              fill
+              sizes="390px"
+              aria-hidden
+            />
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.menuBtn} ${styles.recordBtn} ${
+              debug ? styles.debug : ""
+            }`}
+            onClick={() => navigate("/record")}
+            disabled={transitioning}
+            aria-label="我的成绩"
+          >
+            <Image src="/assets/btn_record.webp" alt="" fill sizes="390px" aria-hidden />
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.menuBtn} ${styles.teamBtn} ${
+              debug ? styles.debug : ""
+            }`}
+            onClick={() => navigate("/team")}
+            disabled={transitioning}
+            aria-label="制作团队"
+          >
+            <Image src="/assets/btn_team.webp" alt="" fill sizes="390px" aria-hidden />
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.hotspot} ${styles.characterHotspot} ${
+              debug ? styles.debug : ""
+            }`}
+            onClick={enterDaily}
+            disabled={transitioning}
+            aria-label="进入今日挑战"
+          />
+
+          <button
+            type="button"
+            className={`${styles.hotspot} ${styles.dailyTagHotspot} ${
+              debug ? styles.debug : ""
+            }`}
+            onClick={enterDaily}
+            disabled={transitioning}
+            aria-label="进入今日挑战"
+          />
+
+          {transitioning ? (
+            <>
+              <div
+                className={styles.mouthPulse}
+                style={{ left: MOUTH_X, top: MOUTH_Y }}
+              />
+              <div className={styles.fadeToBlack} />
+            </>
+          ) : null}
+        </div>
       </div>
-      {error ? <div className="error-text">{error}</div> : null}
+
+      <button
+        type="button"
+        className={styles.debugToggle}
+        onClick={() => setDebug((prev) => !prev)}
+      >
+        {debug ? "Debug: ON" : "Debug: OFF"}
+      </button>
     </div>
   );
 }

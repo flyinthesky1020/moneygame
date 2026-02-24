@@ -4,8 +4,47 @@
 这是一个虚拟股票交易游戏的 H5 项目骨架，用于快速搭建前端结构与依赖。
 
 ## 当前阶段说明
-当前已完成 MVP 后端 API + 前端核心页面联调（首页启动、做题、结算、结果页、排行榜、海报下载），可进行端到端演示。
-当前版本：`1.1.0`（开始进入交互与体验细节优化阶段）。
+当前已完成 MVP 后端 API + 前端核心页面联调（首页启动、做题、结算、结果页、排行榜、海报下载），并进入交互体验细化阶段，可进行端到端演示。
+当前版本：`1.2.0`（交互体验持续优化中）。
+
+## 快速接手索引（新会话优先看这里）
+### 1) 当前状态（2026-02-24）
+- 模式名称（做题页）：`韭皇练习场`（train）/ `韭皇竞技场`（daily）。
+- 做题页标题与副标题使用手写风字体（见 `globals.css` 的 `.play-mode-title-text`、`.play-mode-subtitle-text`）。
+- 做题页顶部指标（进度/总资产/收益率）手机端保持同一行。
+- 做题页背景色与首页一致：`rgb(242, 231, 211)`（`body.play-mode-body`）。
+- 做题按钮：`买入`（红）/ `暂且不动`（深蓝）。
+- 图表区：
+  - 上图：价格K线 + MA7/MA30。
+  - 下图：可切换 `成交量 / MACD / KDJ`（无第三张图）。
+- 每题反馈弹窗：
+  - 标题直接展示 `ROUND_RETURN_PCT_RULES` 命中文案；
+  - 显示本次收益、当日振幅、连击文案；
+  - 特殊成就无解锁时不显示该行。
+- 交互文案配置：
+  - 做题页随机金句：`/Users/haitao/Documents/Newproject/src/lib/playQuotes.ts`
+  - 每题反馈规则与文案：`/Users/haitao/Documents/Newproject/src/lib/playRoundFeedback.ts`
+
+### 2) 素材路径速查
+- 首页素材目录：`/Users/haitao/Documents/Newproject/public/assets`
+- 首页必需素材：
+  - `title_block.webp`
+  - `character_daily.webp`
+  - `leaderboard.webp`
+  - `btn_training.webp`
+  - `btn_record.webp`
+  - `btn_team.webp`
+
+### 3) 关键文件速查
+- 首页舞台与交互：`/Users/haitao/Documents/Newproject/src/app/page.tsx`
+- 首页图层坐标：`/Users/haitao/Documents/Newproject/src/app/page.module.css`
+- 做题页状态机：`/Users/haitao/Documents/Newproject/src/app/play/PlayClient.tsx`
+- K线/指标图组件：`/Users/haitao/Documents/Newproject/src/components/CandlestickWithVolume.tsx`
+- 全局样式：`/Users/haitao/Documents/Newproject/src/app/globals.css`
+- 后端核心 API：
+  - `/Users/haitao/Documents/Newproject/src/app/api/run/start/route.ts`
+  - `/Users/haitao/Documents/Newproject/src/app/api/run/answer/route.ts`
+  - `/Users/haitao/Documents/Newproject/src/app/api/run/finish/route.ts`
 
 ## 技术栈
 - Next.js（App Router）+ TypeScript
@@ -16,6 +55,14 @@
 ## 项目目录结构说明
 ```
 /Users/haitao/Documents/Newproject
+├── public
+│   └── assets
+│       ├── btn_record.webp
+│       ├── btn_team.webp
+│       ├── btn_training.webp
+│       ├── character_daily.webp
+│       ├── leaderboard.webp
+│       └── title_block.webp
 ├── .env.example
 ├── .env.local
 ├── eslint.config.mjs
@@ -39,9 +86,22 @@
     │   │           └── route.ts
     │   ├── globals.css
     │   ├── layout.tsx
+    │   ├── page.module.css
     │   ├── page.tsx
+    │   ├── credits
+    │   │   └── page.tsx
+    │   ├── daily
+    │   │   └── page.tsx
+    │   ├── profile
+    │   │   └── page.tsx
     │   ├── play
     │   │   ├── PlayClient.tsx
+    │   │   └── page.tsx
+    │   ├── record
+    │   │   └── page.tsx
+    │   ├── team
+    │   │   └── page.tsx
+    │   ├── train
     │   │   └── page.tsx
     │   ├── leaderboard
     │   │   └── page.tsx
@@ -108,10 +168,15 @@
   - 按日期（默认新加坡今日）读取 daily completed 榜单
   - 按 `total_return_pct desc` 返回前 100
 - 前端联调：
-  - 首页两个按钮直接调用 `start` 启动 run
-  - `play` 页完成价格K线主图 + 成交量副图（独立小图与独立纵轴）渲染
-  - `play` 页答题改为二选一：`买入 / Buy` 与 `不买 / Hold`，无默认选中，点击即提交
+  - 首页改为 390x844 固定舞台（图层绝对定位 + 统一缩放）以实现像素级还原
+  - 首页图层素材：`title_block.webp`、`character_daily.webp`、`leaderboard.webp`、`btn_training.webp`、`btn_record.webp`、`btn_team.webp`
+  - 首页热点：点击角色区或“今日挑战”竖牌均触发 `enterDaily()`，并执行转场动画后进入 `/daily`
+  - 首页按钮跳转：`韭皇练习场 -> /train`、`我的成绩 -> /record`、`制作团队 -> /team`
+  - 路由映射：`/daily -> /play?mode=daily`、`/train -> /play?mode=train`、`/record -> /profile`、`/team -> /credits`
+  - `play` 页完成价格K线主图 + 指标副图（支持 `成交量 / MACD / KDJ` 切换）渲染
+  - `play` 页答题为二选一：`买入` 与 `暂且不动`，无默认选中，点击即提交
   - `play` 页顶部显示进度、当前总资产、当前收益率
+  - `play` 页模式标题：`韭皇练习场` / `韭皇竞技场`（手写风）
   - 最后一题后调用 `finish` 并跳转 `result/[runId]`
   - `result` 页展示收益曲线（Y 轴含 0）、收益率、总收益、评语
   - `leaderboard` 页调用 `/api/leaderboard` 展示 Top100（收益率、总收益、盈利题数）
@@ -175,20 +240,88 @@ export function getSingaporeDateKey(date = new Date()): string {
 3. 复制 `.env.example` 为 `.env.local` 并填写环境变量。
 4. 启动开发服务器：`npm run dev`。
 
+## 首页素材说明
+- 首页使用固定图层素材，目录：`/Users/haitao/Documents/Newproject/public/assets`
+- 必需文件：
+  - `title_block.webp`
+  - `character_daily.webp`
+  - `leaderboard.webp`
+  - `btn_training.webp`
+  - `btn_record.webp`
+  - `btn_team.webp`
+- 开发辅助：
+  - 页面右上角 `Debug` 开关可显示各图层/热区边界框；
+  - 也可按键盘 `D` 快速开关。
+
+## 首页像素调校指南（390x844 固定舞台）
+- 舞台基准尺寸固定为 `390 x 844`，所有 `left/top/width/height` 都是该坐标系下的像素值。
+- 桌面端仅做等比缩放（`scale`），不会重排；因此移动端看到的位置就是设计基准位置。
+- 关键文件：
+  - 布局与交互：`/Users/haitao/Documents/Newproject/src/app/page.tsx`
+  - 图层与热区坐标：`/Users/haitao/Documents/Newproject/src/app/page.module.css`
+
+### 当前图层坐标
+- `.titleLayer`：`left: 30px; top: 64px; width: 330px; height: 168px;`
+- `.characterLayer`：`left: 45px; top: 214px; width: 292px; height: 356px;`
+- `.leaderboardLayer`：`left: 18px; top: 564px; width: 212px; height: 232px;`
+- `.trainingBtn`：`left: 237px; top: 614px; width: 136px; height: 56px;`
+- `.recordBtn`：`left: 237px; top: 684px; width: 136px; height: 56px;`
+- `.teamBtn`：`left: 237px; top: 754px; width: 136px; height: 56px;`
+
+### 当前热区坐标（需与素材联动）
+- `.characterHotspot`：`left: 52px; top: 248px; width: 230px; height: 318px;`
+- `.dailyTagHotspot`：`left: 289px; top: 395px; width: 57px; height: 151px;`
+
+### 转场嘴部中心（需与角色素材联动）
+- `page.tsx` 中常量：
+  - `MOUTH_X = 196`
+  - `MOUTH_Y = 408`
+- 如果角色素材整体移动/缩放了，需同步更新这两个值，否则“张嘴圆形 + 缩放中心”会偏移。
+
+### 如何调整素材尺寸并同步热区
+1. 打开首页，点击右上角 `Debug: ON`（或按 `D`），先看图层框与素材是否重合。
+2. 在 `page.module.css` 调整对应图层的 `left/top/width/height`，直到素材位置准确。
+3. 调整 `characterHotspot`、`dailyTagHotspot`，让热区完整覆盖可点击区域。
+4. 若角色嘴部位置变化，在 `page.tsx` 同步更新 `MOUTH_X/MOUTH_Y`。
+5. 校验交互：
+   - 点击角色区/今日挑战竖牌都应进入 `/daily`
+   - 点击三个按钮分别跳转 `/train`、`/record`、`/team`
+   - 转场期间不会重复触发（已内置防双击）
+
+### 背景色约束（当前版本）
+- 首页舞台背景为纯色：`rgb(242, 231, 211)`。
+- 位置：`page.module.css` 的 `.bg`。
+
 ## 前端交互注意事项（最新）
-- 做题页仅保留两个选择：`买入 / Buy` 与 `不买 / Hold`。
+- 做题页仅保留两个选择：`买入` 与 `暂且不动`。
 - 做题页每题默认无选中态；点击任一选项即提交，不再需要“提交答案”确认按钮。
 - 做题页顶部显示：进度、当前总资产、当前收益率（不再显示 mode）。
-- K线与成交量已拆分为上下两个图：
-  - 上方为价格K线主图
-  - 下方为成交量副图（独立纵轴），并与主图时间范围联动
+- 做题页背景色与首页一致：`rgb(242, 231, 211)`。
+- 模式标题文案：
+  - `train -> 韭皇练习场`
+  - `daily -> 韭皇竞技场`
+- 图表上下结构：
+  - 上方：价格图（K线 + MA7 + MA30）
+  - 下方：指标图（成交量 / MACD / KDJ 切换）
+  - 上下图时间范围联动
+- 每题反馈弹窗文案来源：
+  - 连击与收益率区间规则：`src/lib/playRoundFeedback.ts`
+  - 标题直接使用 `ROUND_RETURN_PCT_RULES` 命中文案
 
 ## 常见问题排查
 - 若出现 `Cannot find module './331.js'`（或类似 chunk 缺失）：
   1. 停掉当前 dev 进程
   2. 删除构建缓存：`rm -rf .next`
   3. 重新启动：`npm run dev`
+- 已内置快捷命令：`npm run dev:clean`（等价于清理 `.next` 后启动 dev）。
 - 若仍异常，可先验证生产构建：`npm run build`，再重新执行 `npm run dev`。
+- 若出现浏览器报错 `Failed to execute 'setItem' on 'Storage' ... exceeded the quota`：
+  1. 打开浏览器控制台执行：`sessionStorage.clear()`
+  2. 刷新页面并重新进入模式
+  3. 若仍复现，优先检查是否在频繁开启新 run 且浏览器禁用了存储清理
+- 若想快速验证当前改动是否有静态问题：
+  1. 执行 `npm run lint`
+  2. 必要时执行 `npm run build`
 
 ## 环境变量说明
 - `NEXT_PUBLIC_SUPABASE_URL`：Supabase 项目 URL

@@ -48,7 +48,10 @@ export default function LeaderboardPage() {
 
   return (
     <div className="stack">
-      <h1>排行榜 Top100</h1>
+      <div className="page-head">
+        <h1>排行榜 Top100</h1>
+        <p className="page-subtitle">按日收益率排序，观察稳定性与胜率结构。</p>
+      </div>
       <div className="row">
         <input
           type="date"
@@ -69,25 +72,27 @@ export default function LeaderboardPage() {
           <span>总人数：{data?.leaderboard?.length ?? 0}</span>
         </div>
 
-        <div className="board-grid board-grid-head">
-          <span>排名</span>
-          <span>用户</span>
-          <span>收益率</span>
-          <span>总收益</span>
-          <span>盈利题数</span>
-        </div>
-
-        {(data?.leaderboard ?? []).map((row, idx) => (
-          <div key={row.id} className="board-grid">
-            <span>#{idx + 1}</span>
-            <span>{row.user_id.slice(0, 8)}...</span>
-            <span className={row.total_return_pct >= 0 ? "profit-up" : "profit-down"}>
-              {(row.total_return_pct * 100).toFixed(2)}%
-            </span>
-            <span>{Number(row.total_profit ?? 0).toFixed(2)}</span>
-            <span>{row.win_count ?? 0}</span>
+        <div className="board-table">
+          <div className="board-grid board-grid-head">
+            <span>排名</span>
+            <span>用户</span>
+            <span>收益率</span>
+            <span>总收益</span>
+            <span>盈利题数</span>
           </div>
-        ))}
+
+          {(data?.leaderboard ?? []).map((row, idx) => (
+            <div key={row.id} className="board-grid">
+              <span>#{idx + 1}</span>
+              <span>{row.user_id.slice(0, 8)}...</span>
+              <span className={row.total_return_pct >= 0 ? "profit-up" : "profit-down"}>
+                {(row.total_return_pct * 100).toFixed(2)}%
+              </span>
+              <span>{Number(row.total_profit ?? 0).toFixed(2)}</span>
+              <span>{row.win_count ?? 0}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

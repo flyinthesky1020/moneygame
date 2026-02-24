@@ -97,10 +97,29 @@ export default function ResultPage() {
 
   return (
     <div className="stack">
-      <h1>结算页</h1>
-      <p>
-        Run ID：{runId} | 模式：{data.mode} | 题数：{data.n}
-      </p>
+      <div className="page-head">
+        <h1>结算页</h1>
+        <p className="page-subtitle">
+          Run ID：{runId} · 模式：{data.mode} · 题数：{data.n}
+        </p>
+      </div>
+
+      <div className="metric-strip">
+        <div className="metric-cell">
+          <span className="metric-label">收益率</span>
+          <span className="metric-value">
+            {(data.total_return_pct * 100).toFixed(2)}%
+          </span>
+        </div>
+        <div className="metric-cell">
+          <span className="metric-label">总收益</span>
+          <span className="metric-value">{data.total_profit.toFixed(2)}</span>
+        </div>
+        <div className="metric-cell">
+          <span className="metric-label">最终资金</span>
+          <span className="metric-value">{data.final_bankroll.toFixed(2)}</span>
+        </div>
+      </div>
 
       <div className="card">
         <h3>累计收益曲线</h3>
@@ -108,10 +127,7 @@ export default function ResultPage() {
       </div>
 
       <div className="card stack">
-        <h3>核心指标</h3>
-        <p>收益率：{(data.total_return_pct * 100).toFixed(2)}%</p>
-        <p>总收益：{data.total_profit.toFixed(2)}</p>
-        <p>最终资金：{data.final_bankroll.toFixed(2)}</p>
+        <h3>统计细节</h3>
         <p>胜场：{data.win_count}</p>
         <p>平均仓位：{(data.avg_buy_ratio * 100).toFixed(2)}%</p>
       </div>

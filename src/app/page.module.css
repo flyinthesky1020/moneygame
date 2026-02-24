@@ -1,0 +1,192 @@
+.viewport {
+  width: 100%;
+  min-height: calc(100vh - 32px);
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.stageScale {
+  width: 390px;
+  height: 844px;
+  transform-origin: center center;
+  will-change: transform, opacity, filter;
+}
+
+.stage {
+  width: 390px;
+  height: 844px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  background: rgb(242, 231, 211);
+}
+
+.layer {
+  position: absolute;
+}
+
+.titleLayer {
+  left: 30px;
+  top: 64px;
+  width: 330px;
+  height: 168px;
+}
+
+.characterLayer {
+  left: 45px;
+  top: 214px;
+  width: 292px;
+  height: 356px;
+}
+
+.leaderboardLayer {
+  left: 18px;
+  top: 564px;
+  width: 212px;
+  height: 232px;
+}
+
+.menuBtn {
+  position: absolute;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+}
+
+.menuBtn:disabled {
+  cursor: default;
+}
+
+.trainingBtn {
+  left: 237px;
+  top: 614px;
+  width: 136px;
+  height: 56px;
+}
+
+.recordBtn {
+  left: 237px;
+  top: 684px;
+  width: 136px;
+  height: 56px;
+}
+
+.teamBtn {
+  left: 237px;
+  top: 754px;
+  width: 136px;
+  height: 56px;
+}
+
+.hotspot {
+  position: absolute;
+  border: none;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.characterHotspot {
+  left: 52px;
+  top: 248px;
+  width: 230px;
+  height: 318px;
+}
+
+.dailyTagHotspot {
+  left: 289px;
+  top: 395px;
+  width: 57px;
+  height: 151px;
+}
+
+.sink {
+  animation: stageSink 900ms cubic-bezier(0.18, 0.78, 0.2, 1) forwards;
+}
+
+.mouthPulse {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid rgba(32, 17, 7, 0.85);
+  background: rgba(245, 230, 206, 0.65);
+  animation: mouthOpen 360ms ease-out forwards;
+  z-index: 60;
+}
+
+.fadeToBlack {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  animation: fadeBlack 420ms linear 480ms forwards;
+  z-index: 70;
+}
+
+@keyframes mouthOpen {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.25;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(8.5);
+    opacity: 1;
+  }
+}
+
+@keyframes stageSink {
+  0% {
+    transform: scale(var(--runtime-scale, 1));
+    filter: brightness(1);
+  }
+  60% {
+    transform: scale(calc(var(--runtime-scale, 1) * 0.78));
+    filter: brightness(0.95);
+  }
+  100% {
+    transform: scale(calc(var(--runtime-scale, 1) * 0.64));
+    filter: brightness(0.8);
+  }
+}
+
+@keyframes fadeBlack {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.debug {
+  outline: 1px dashed rgba(26, 88, 198, 0.8);
+  outline-offset: -1px;
+  background-color: rgba(32, 109, 233, 0.08);
+}
+
+.debugToggle {
+  position: fixed;
+  right: 14px;
+  top: 14px;
+  z-index: 999;
+  border: 1px solid #d4d7dc;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
+  padding: 6px 10px;
+  font-size: 12px;
+}
