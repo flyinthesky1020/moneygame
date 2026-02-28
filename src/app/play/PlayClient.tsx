@@ -47,12 +47,22 @@ type FinishResponse = {
   return_pct: number;
   final_bankroll: number;
   win_count: number;
+  win_days?: number;
+  loss_days?: number;
+  idle_days?: number;
   avg_buy_ratio: number;
   curve: number[];
   style_tag: string;
   style_text: string;
+  nickname?: string;
   completed_at: string;
 };
+
+const MAX_NICKNAME_LEN = 16;
+
+function sanitizeNickname(input: string): string {
+  return input.replace(/\s+/g, " ").trim().slice(0, MAX_NICKNAME_LEN);
+}
 
 function isMode(v: string | null): v is Mode {
   return v === "train" || v === "daily";
@@ -96,6 +106,19 @@ function safeSetRunStart(runId: string, payload: StartResponse) {
   }
 }
 
+function safeSetNickname(runId: string, nickname: string) {
+  try {
+    sessionStorage.setItem(`run_nickname:${runId}`, nickname);
+  } catch {
+    // ignore storage errors
+  }
+  try {
+    localStorage.setItem(`run_nickname:${runId}`, nickname);
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export default function PlayClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -116,6 +139,8 @@ export default function PlayClient() {
   const [cumProfit, setCumProfit] = useState(0);
   const [profitHistory, setProfitHistory] = useState<number[]>([]);
   const [dailyQuote] = useState(() => pickRandomPlayQuote());
+  const [nicknameInput, setNicknameInput] = useState("");
+  const [nicknameError, setNicknameError] = useState("");
 
   useEffect(() => {
     document.body.classList.add("play-mode-body");
@@ -261,32 +286,46 @@ export default function PlayClient() {
     if (!isLast) {
       setAnswerFeedback(null);
       setSelectedRatio(null);
+      setNicknameError("");
       setCurrentIndex((prev) => prev + 1);
       return;
     }
 
+    const nickname = sanitizeNickname(nicknameInput);
+    if (!nickname) {
+      setNicknameError("请先填写昵称");
+      return;
+    }
+
     try {
+      setNicknameError("");
       setFinishing(true);
       const res = await fetch("/api/run/finish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ run_id: runState.run_id }),
+        body: JSON.stringify({
+          run_id: runState.run_id,
+          nickname,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data?.message ?? "结算失败");
       }
-      const finishData = data as FinishResponse;
+      const finishData = {
+        ...(data as FinishResponse),
+        nickname,
+      };
       sessionStorage.setItem(
         `run_result:${runState.run_id}`,
         JSON.stringify(finishData)
       );
+      safeSetNickname(runState.run_id, nickname);
       router.push(`/result/${runState.run_id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "结算失败");
     } finally {
       setFinishing(false);
-      setAnswerFeedback(null);
     }
   }
 
@@ -314,7 +353,7 @@ export default function PlayClient() {
 
   return (
     <div className="stack">
-      <div className="page-head">
+      <div className="page-head play-page-head">
         <h1 className="play-mode-title-text">{modeTitle}</h1>
         <p className="page-subtitle play-mode-subtitle-text">{dailyQuote}</p>
       </div>
@@ -405,6 +444,30 @@ export default function PlayClient() {
             <p>{answerFeedback.streak_comment}</p>
             {answerFeedback.unlocked_achievements.length > 0 ? (
               <p>特殊成就解锁：{answerFeedback.unlocked_achievements.join("、")}</p>
+            ) : null}
+            {isLast ? (
+              <div className="stack">
+                <label htmlFor="finish-nickname">你的昵称（用于结算和分享）</label>
+                <input
+                  id="finish-nickname"
+                  className="date-input"
+                  type="text"
+                  value={nicknameInput}
+                  onChange={(e) => {
+                    const next = sanitizeNickname(e.target.value);
+                    setNicknameInput(next);
+                    if (nicknameError && next) {
+                      setNicknameError("");
+                    }
+                  }}
+                  placeholder="请输入昵称"
+                  maxLength={MAX_NICKNAME_LEN}
+                  disabled={finishing}
+                />
+                {nicknameError ? (
+                  <div className="error-text">{nicknameError}</div>
+                ) : null}
+              </div>
             ) : null}
             <button
               type="button"

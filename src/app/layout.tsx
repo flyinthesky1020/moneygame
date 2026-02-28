@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import HomeBackButton from "@/components/HomeBackButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
+        <HomeBackButton />
         <main>{children}</main>
       </body>
     </html>

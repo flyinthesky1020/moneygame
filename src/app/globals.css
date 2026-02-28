@@ -8,8 +8,8 @@
   --text-muted: #4b5563;
   --accent: #1f3a5f;
   --accent-soft: #e8eef7;
-  --positive: #0f766e;
-  --negative: #b45309;
+  --positive: #c63d32;
+  --negative: #2f8a4b;
   --error: #b42318;
 
   --radius-sm: 10px;
@@ -51,9 +51,53 @@ body.play-mode-body {
   background: rgb(242, 231, 211);
 }
 
+body.result-mode-body {
+  background: #f2dfb5;
+}
+
+body.result-mode-body main {
+  width: min(100%, 520px);
+  min-height: 100dvh;
+  padding: 10px 12px 16px;
+}
+
 a {
   color: inherit;
   text-decoration: none;
+}
+
+.home-back-btn {
+  position: fixed;
+  top: 18px;
+  left: 14px;
+  z-index: 1000;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1.5px solid rgba(127, 87, 49, 0.45);
+  border-radius: 999px;
+  background: rgba(247, 216, 166, 0.55);
+  color: #3a2818;
+  backdrop-filter: blur(2px);
+}
+
+.home-back-btn:hover {
+  transform: none;
+  border-color: rgba(127, 87, 49, 0.7);
+  box-shadow: none;
+}
+
+.home-back-btn:active {
+  transform: scale(0.96);
+  box-shadow: none;
+}
+
+.home-back-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 main {
@@ -148,10 +192,24 @@ button:disabled {
   flex-direction: column;
   gap: var(--space-2);
   margin-bottom: var(--space-2);
+  align-items: center;
+  width: 100%;
+}
+
+.stack > h1:first-child {
+  width: 100%;
+  text-align: center;
 }
 
 .page-subtitle {
   font-size: 15px;
+  width: 100%;
+  text-align: left;
+}
+
+.page-head > h1 {
+  width: 100%;
+  text-align: center;
 }
 
 .play-mode-title-text {
@@ -163,6 +221,14 @@ button:disabled {
 .play-mode-subtitle-text {
   font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
     "STKaiti", cursive;
+}
+
+.play-page-head {
+  margin-top: -6px;
+}
+
+.play-page-head > h1 {
+  line-height: 1;
 }
 
 .metric-strip {
@@ -297,6 +363,71 @@ button:disabled {
   background: #fff;
 }
 
+.result-page-shell {
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-page-shell .page-head {
+  margin-bottom: 0;
+  gap: 4px;
+}
+
+.result-page-title {
+  font-size: clamp(24px, 6vw, 34px);
+}
+
+.result-poster-wrap {
+  width: min(100%, 420px, calc((100dvh - 132px) * 0.6));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.result-poster-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 22px;
+  border: none;
+  box-shadow: 0 8px 24px rgba(97, 67, 31, 0.16);
+  background: transparent;
+}
+
+.result-save-btn {
+  width: min(320px, 100%);
+  align-self: center;
+  border-radius: 999px;
+  border: 2px solid #b78042;
+  background: linear-gradient(180deg, #ffd9aa 0%, #f5bd7b 100%);
+  color: #23160f;
+  font-family: "HanziPen SC", "Kaiti SC", "KaiTi", "STKaiti", cursive;
+  font-size: clamp(28px, 7vw, 34px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 8px 18px;
+  animation: result-save-breathe 2.2s ease-in-out infinite;
+}
+
+.result-save-btn:hover:not(:disabled) {
+  animation-play-state: paused;
+}
+
+@keyframes result-save-breathe {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(183, 128, 66, 0.22);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 12px rgba(183, 128, 66, 0.08);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(183, 128, 66, 0);
+  }
+}
+
 .board-head {
   display: flex;
   justify-content: space-between;
@@ -354,6 +485,10 @@ button:disabled {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .play-page-head {
+    margin-top: -2px;
+  }
+
   .play-metric-strip .metric-cell {
     padding: 8px 8px;
     gap: 2px;
@@ -368,6 +503,15 @@ button:disabled {
     white-space: nowrap;
   }
 
+  .page-head {
+    width: 100%;
+  }
+
+  .stack > h1:first-child {
+    width: 100%;
+    text-align: center;
+  }
+
   button {
     width: 100%;
   }
@@ -375,5 +519,17 @@ button:disabled {
   .row > button {
     width: auto;
     flex: 1 1 160px;
+  }
+
+  .home-back-btn {
+    top: 10px;
+    left: 10px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .home-back-btn svg {
+    width: 18px;
+    height: 18px;
   }
 }

@@ -25,6 +25,9 @@ type Props = {
 
 type IndicatorMode = "volume" | "macd" | "kdj";
 
+const RISE_COLOR = "#c63d32";
+const FALL_COLOR = "#2f8a4b";
+
 function toTs(index: number): UTCTimestamp {
   return (index + 1) as UTCTimestamp;
 }
@@ -67,7 +70,7 @@ function buildMacdData(candles: CandlePoint[]) {
       (v, i): HistogramData<UTCTimestamp> => ({
         time: toTs(i),
         value: v,
-        color: v >= 0 ? "#2f7d76" : "#a14b45",
+        color: v >= 0 ? RISE_COLOR : FALL_COLOR,
       })
     ),
   };
@@ -132,7 +135,7 @@ export default function CandlestickWithVolume({ candles, height = 460 }: Props) 
         (d, i): HistogramData<UTCTimestamp> => ({
           time: toTs(i),
           value: d.v,
-          color: d.c >= d.o ? "#2f7d76" : "#a14b45",
+          color: d.c >= d.o ? RISE_COLOR : FALL_COLOR,
         })
       ),
     [candles]
@@ -193,11 +196,11 @@ export default function CandlestickWithVolume({ candles, height = 460 }: Props) 
     indicatorChartRef.current = indicatorChart;
 
     const candlestickSeries = priceChart.addCandlestickSeries({
-      upColor: "#2f7d76",
-      downColor: "#a14b45",
+      upColor: RISE_COLOR,
+      downColor: FALL_COLOR,
       borderVisible: false,
-      wickUpColor: "#2f7d76",
-      wickDownColor: "#a14b45",
+      wickUpColor: RISE_COLOR,
+      wickDownColor: FALL_COLOR,
     });
     const ma7Series = priceChart.addLineSeries({
       color: "#e69138",

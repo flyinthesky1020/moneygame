@@ -27,7 +27,26 @@ export async function GET(_req: NextRequest, ctx: Context) {
       return NextResponse.json({ message: "Run not found" }, { status: 404 });
     }
 
-    return NextResponse.json(data);
+    const { data: answers, error: ansErr } = await supabase
+      .from("run_answers")
+      .select("buy_ratio,profit")
+      .eq("run_id", runId);
+
+    if (ansErr) {
+      return NextResponse.json({ message: ansErr.message }, { status: 500 });
+    }
+
+    const rows = answers ?? [];
+    const winDays = rows.filter((row) => row.buy_ratio > 0 && row.profit > 0).length;
+    const lossDays = rows.filter((row) => row.buy_ratio > 0 && row.profit < 0).length;
+    const idleDays = rows.filter((row) => row.buy_ratio <= 0).length;
+
+    return NextResponse.json({
+      ...data,
+      win_days: winDays,
+      loss_days: lossDays,
+      idle_days: idleDays,
+    });
   } catch (err) {
     return NextResponse.json(
       { message: err instanceof Error ? err.message : "Unexpected error" },

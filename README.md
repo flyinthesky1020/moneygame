@@ -5,15 +5,17 @@
 
 ## 当前阶段说明
 当前已完成 MVP 后端 API + 前端核心页面联调（首页启动、做题、结算、结果页、排行榜、海报下载），并进入交互体验细化阶段，可进行端到端演示。
-当前版本：`1.2.0`（交互体验持续优化中）。
+当前版本：`1.3.0`（结算与分享体验持续优化中）。
 
 ## 快速接手索引（新会话优先看这里）
-### 1) 当前状态（2026-02-24）
+### 1) 当前状态（2026-02-28）
 - 模式名称（做题页）：`韭皇练习场`（train）/ `韭皇竞技场`（daily）。
 - 做题页标题与副标题使用手写风字体（见 `globals.css` 的 `.play-mode-title-text`、`.play-mode-subtitle-text`）。
 - 做题页顶部指标（进度/总资产/收益率）手机端保持同一行。
 - 做题页背景色与首页一致：`rgb(242, 231, 211)`（`body.play-mode-body`）。
+- 结果页背景色与分享页外底一致，采用浅米色纯色底。
 - 做题按钮：`买入`（红）/ `暂且不动`（深蓝）。
+- 涨跌颜色统一规则：`涨红跌绿`（做题页反馈、K线、成交量、MACD、结算海报均已同步）。
 - 图表区：
   - 上图：价格K线 + MA7/MA30。
   - 下图：可切换 `成交量 / MACD / KDJ`（无第三张图）。
@@ -21,9 +23,21 @@
   - 标题直接展示 `ROUND_RETURN_PCT_RULES` 命中文案；
   - 显示本次收益、当日振幅、连击文案；
   - 特殊成就无解锁时不显示该行。
+- 最后一题完成后：
+  - 用户必须填写昵称后才能结算；
+  - 昵称会用于结算页与分享海报。
+- 结果页/分享图：
+  - 页面左上角提供极简返回主页按钮；
+  - 分享图为手写卡片风，支持一键保存；
+  - 左下角展示昵称、日期与扫码引导文案；
+  - 右下角展示二维码（当前指向 `www.baidu.com`）；
+  - 图表下方文案按收益结果从三组配置文案中稳定随机；
+  - 文案作者在文案末行下方右对齐显示；
+  - 右上角勋章按总收益率分为 5 档：`技术的神 / 盈利者 / 平淡是福 / 亏损者 / 你就是韭皇`。
 - 交互文案配置：
   - 做题页随机金句：`/Users/haitao/Documents/Newproject/src/lib/playQuotes.ts`
   - 每题反馈规则与文案：`/Users/haitao/Documents/Newproject/src/lib/playRoundFeedback.ts`
+  - 分享图随机文案与作者：`/Users/haitao/Documents/Newproject/src/lib/sharePosterQuotes.ts`
 
 ### 2) 素材路径速查
 - 首页素材目录：`/Users/haitao/Documents/Newproject/public/assets`
@@ -40,6 +54,8 @@
 - 首页图层坐标：`/Users/haitao/Documents/Newproject/src/app/page.module.css`
 - 做题页状态机：`/Users/haitao/Documents/Newproject/src/app/play/PlayClient.tsx`
 - K线/指标图组件：`/Users/haitao/Documents/Newproject/src/components/CandlestickWithVolume.tsx`
+- 返回主页按钮：`/Users/haitao/Documents/Newproject/src/components/HomeBackButton.tsx`
+- 结算分享海报组件：`/Users/haitao/Documents/Newproject/src/components/SharePosterCanvas.tsx`
 - 全局样式：`/Users/haitao/Documents/Newproject/src/app/globals.css`
 - 后端核心 API：
   - `/Users/haitao/Documents/Newproject/src/app/api/run/start/route.ts`
@@ -174,13 +190,15 @@
   - 首页按钮跳转：`韭皇练习场 -> /train`、`我的成绩 -> /record`、`制作团队 -> /team`
   - 路由映射：`/daily -> /play?mode=daily`、`/train -> /play?mode=train`、`/record -> /profile`、`/team -> /credits`
   - `play` 页完成价格K线主图 + 指标副图（支持 `成交量 / MACD / KDJ` 切换）渲染
+  - `play` 页与结算页采用统一涨跌配色：`涨红跌绿`
   - `play` 页答题为二选一：`买入` 与 `暂且不动`，无默认选中，点击即提交
   - `play` 页顶部显示进度、当前总资产、当前收益率
   - `play` 页模式标题：`韭皇练习场` / `韭皇竞技场`（手写风）
-  - 最后一题后调用 `finish` 并跳转 `result/[runId]`
-  - `result` 页展示收益曲线（Y 轴含 0）、收益率、总收益、评语
+  - 最后一题后要求输入昵称，再调用 `finish` 并跳转 `result/[runId]`
+  - `result` 页展示手写风结算海报，并提供保存图片按钮
+  - `result` 页左上角提供返回主页按钮
   - `leaderboard` 页调用 `/api/leaderboard` 展示 Top100（收益率、总收益、盈利题数）
-  - `result` 页支持 Canvas 生成分享海报并在浏览器下载（不上传存储）
+  - `result` 页支持 Canvas 生成分享海报并在浏览器下载/系统分享（不上传存储）
 
 ### 4) 未解决问题
 - 目前使用 Supabase 匿名公钥直连表，尚未配置 RLS 与更细粒度权限控制。
@@ -190,7 +208,7 @@
 ### 5) 待办列表
 - 前端：
   - 补充异常交互（断线重试、重复提交提示、daily 冲突提示优化）
-  - 海报样式模板扩展（主题切换、二维码/链接样式优化）
+  - 海报样式模板扩展（主题切换、二维码链接切换、插画素材优化）
 - 数据与安全：
   - 上线 RLS 策略与 service role 分层
   - 为 `run_answers(run_id, question_id)` 增加唯一约束（若未加）

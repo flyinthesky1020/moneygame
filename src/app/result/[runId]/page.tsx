@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import ProfitCurveChart from "@/components/ProfitCurveChart";
 import SharePosterCanvas from "@/components/SharePosterCanvas";
-import StyleCommentCard from "@/components/StyleCommentCard";
 
 type RunResult = {
   id?: string;
@@ -15,12 +13,46 @@ type RunResult = {
   total_return_pct: number;
   final_bankroll: number;
   win_count: number;
+  win_days?: number;
+  loss_days?: number;
+  idle_days?: number;
   avg_buy_ratio: number;
   curve: number[];
   style_tag: string;
   style_text: string;
+  nickname?: string;
   completed_at?: string;
 };
+
+function safeGetNickname(runId: string): string {
+  try {
+    const sessionValue = sessionStorage.getItem(`run_nickname:${runId}`);
+    if (sessionValue?.trim()) return sessionValue.trim();
+  } catch {
+    // ignore storage errors
+  }
+  try {
+    const localValue = localStorage.getItem(`run_nickname:${runId}`);
+    if (localValue?.trim()) return localValue.trim();
+  } catch {
+    // ignore storage errors
+  }
+  return "";
+}
+
+function safeSetNickname(runId: string, nickname: string) {
+  if (!nickname) return;
+  try {
+    sessionStorage.setItem(`run_nickname:${runId}`, nickname);
+  } catch {
+    // ignore storage errors
+  }
+  try {
+    localStorage.setItem(`run_nickname:${runId}`, nickname);
+  } catch {
+    // ignore storage errors
+  }
+}
 
 export default function ResultPage() {
   const params = useParams<{ runId: string }>();
@@ -28,6 +60,13 @@ export default function ResultPage() {
   const [data, setData] = useState<RunResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    document.body.classList.add("result-mode-body");
+    return () => {
+      document.body.classList.remove("result-mode-body");
+    };
+  }, []);
 
   useEffect(() => {
     let canceled = false;
@@ -45,8 +84,16 @@ export default function ResultPage() {
         const cacheRaw = sessionStorage.getItem(`run_result:${runId}`);
         if (cacheRaw) {
           const cached = JSON.parse(cacheRaw) as RunResult;
+          const cachedNickname = (cached.nickname ?? "").trim();
+          const nickname = cachedNickname || safeGetNickname(runId);
+          if (nickname) {
+            safeSetNickname(runId, nickname);
+          }
           if (!canceled) {
-            setData(cached);
+            setData({
+              ...cached,
+              nickname,
+            });
             setLoading(false);
           }
           return;
@@ -62,7 +109,9 @@ export default function ResultPage() {
           ...json,
           run_id: json.id ?? runId,
           curve: Array.isArray(json.curve) ? json.curve : [0],
+          nickname: safeGetNickname(runId),
         };
+        safeSetNickname(runId, normalized.nickname ?? "");
         sessionStorage.setItem(`run_result:${runId}`, JSON.stringify(normalized));
         if (!canceled) {
           setData(normalized);
@@ -95,59 +144,29 @@ export default function ResultPage() {
     );
   }
 
+  const displayNickname = data.nickname?.trim() || "匿名玩家";
+  const winDays = data.win_days ?? data.win_count ?? 0;
+  const idleDays = data.idle_days ?? 0;
+  const fallbackLoss = Math.max(0, data.n - winDays - idleDays);
+  const lossDays = data.loss_days ?? fallbackLoss;
+
   return (
-    <div className="stack">
+    <div className="stack result-page-shell">
       <div className="page-head">
-        <h1>结算页</h1>
-        <p className="page-subtitle">
-          Run ID：{runId} · 模式：{data.mode} · 题数：{data.n}
-        </p>
+        <h1 className="play-mode-title-text result-page-title">战绩结算</h1>
       </div>
-
-      <div className="metric-strip">
-        <div className="metric-cell">
-          <span className="metric-label">收益率</span>
-          <span className="metric-value">
-            {(data.total_return_pct * 100).toFixed(2)}%
-          </span>
-        </div>
-        <div className="metric-cell">
-          <span className="metric-label">总收益</span>
-          <span className="metric-value">{data.total_profit.toFixed(2)}</span>
-        </div>
-        <div className="metric-cell">
-          <span className="metric-label">最终资金</span>
-          <span className="metric-value">{data.final_bankroll.toFixed(2)}</span>
-        </div>
-      </div>
-
-      <div className="card">
-        <h3>累计收益曲线</h3>
-        <ProfitCurveChart curve={data.curve} />
-      </div>
-
-      <div className="card stack">
-        <h3>统计细节</h3>
-        <p>胜场：{data.win_count}</p>
-        <p>平均仓位：{(data.avg_buy_ratio * 100).toFixed(2)}%</p>
-      </div>
-
-      <div className="card">
-        <StyleCommentCard
-          styleTag={data.style_tag || "稳健观察者"}
-          styleText={data.style_text || "暂无评语"}
-        />
-      </div>
-
-      <div className="card stack">
-        <h3>生成分享海报</h3>
-        <SharePosterCanvas
-          runId={runId || ""}
-          totalReturnPct={data.total_return_pct}
-          curve={data.curve}
-          styleText={data.style_text || "暂无评语"}
-        />
-      </div>
+      <SharePosterCanvas
+        runId={runId || ""}
+        nickname={displayNickname}
+        completedAt={data.completed_at}
+        totalReturnPct={data.total_return_pct}
+        totalProfit={data.total_profit}
+        winDays={winDays}
+        lossDays={lossDays}
+        idleDays={idleDays}
+        curve={data.curve}
+        styleText={data.style_text || "暂无评语"}
+      />
     </div>
   );
 }

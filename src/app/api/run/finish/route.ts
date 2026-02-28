@@ -17,10 +17,18 @@ type AnswerRow = {
   cum_profit_after: number;
 };
 
+const MAX_NICKNAME_LEN = 16;
+
+function sanitizeNickname(input: unknown): string {
+  if (typeof input !== "string") return "";
+  return input.replace(/\s+/g, " ").trim().slice(0, MAX_NICKNAME_LEN);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
     const runId = body?.run_id;
+    const nickname = sanitizeNickname(body?.nickname);
     if (!isUuid(runId)) {
       return NextResponse.json({ message: "Invalid run_id" }, { status: 400 });
     }
@@ -88,6 +96,9 @@ export async function POST(req: NextRequest) {
 
     const rows = (answers ?? []) as AnswerRow[];
     const summary = summarizeRun(rows);
+    const winDays = rows.filter((row) => row.buy_ratio > 0 && row.profit > 0).length;
+    const lossDays = rows.filter((row) => row.buy_ratio > 0 && row.profit < 0).length;
+    const idleDays = rows.filter((row) => row.buy_ratio <= 0).length;
     const style = generateStyle({
       totalReturnPct: summary.totalReturnPct,
       winCount: summary.winCount,
@@ -138,12 +149,16 @@ export async function POST(req: NextRequest) {
       run_id: runId,
       mode: runRow.mode,
       date_key: runRow.date_key,
+      nickname,
       n: summary.n,
       total_profit: summary.totalProfit,
       total_return_pct: summary.totalReturnPct,
       return_pct: summary.totalReturnPct,
       final_bankroll: startBankroll + summary.totalProfit,
       win_count: summary.winCount,
+      win_days: winDays,
+      loss_days: lossDays,
+      idle_days: idleDays,
       avg_buy_ratio: summary.avgBuyRatio,
       curve: summary.curve,
       style_tag: style.style_tag,
