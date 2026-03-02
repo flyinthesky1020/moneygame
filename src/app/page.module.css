@@ -1,9 +1,10 @@
 .viewport {
   width: 100%;
-  min-height: calc(100vh - 32px);
+  height: 100dvh;
   display: grid;
   place-items: center;
   position: relative;
+  background: rgb(242, 231, 211);
   overflow: hidden;
 }
 
@@ -44,27 +45,288 @@
   top: 214px;
   width: 292px;
   height: 356px;
+  transform-origin: center bottom;
+  animation: characterBob 3.4s ease-in-out infinite;
+}
+
+.characterLayer::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  right: 52px;
+  bottom: 10px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(111, 80, 43, 0.16);
+  filter: blur(8px);
+  transform-origin: center center;
+  animation: characterShadow 3.4s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .leaderboardLayer {
-  left: 18px;
-  top: 564px;
-  width: 212px;
-  height: 232px;
+  left: 4px;
+  top: 530px;
+  width: 276px;
+  height: 302px;
+}
+
+.homePodiumLayer {
+  left: 85px;
+  top: 645px;
+  width: 254px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  z-index: 12;
+}
+
+.homePodiumItem {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 20px 2.5em auto;
+  align-items: center;
+  gap: 1px;
+}
+
+.homePodiumItem1 {
+  min-height: 0;
+}
+
+.homePodiumItem2 {
+  margin-top: 0;
+}
+
+.homePodiumItem3 {
+  margin-top: 0;
+}
+
+.homePodiumRank {
+  font-size: 9px;
+  font-weight: 800;
+  color: #4a2f1d;
+  line-height: 1;
+}
+
+.homePodiumName {
+  width: 4em;
+  font-size: 10px;
+  line-height: 1;
+  color: #432818;
+  font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
+    "STKaiti", cursive;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.homePodiumReturn {
+  font-size: 9px;
+  line-height: 1;
+  color: #b53b30;
+  font-weight: 700;
+}
+
+.taskLayer {
+  left: 50px;
+  top: 530px;
+  width: 250px;
+  min-height: 42px;
+  z-index: 40;
+}
+
+.taskLayer::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 7px;
+  height: 1px;
+  background: rgba(96, 64, 35, 0.14);
+  pointer-events: none;
+}
+
+.taskLayer::after {
+  content: "";
+  position: absolute;
+  inset: -4px -6px -4px -2px;
+  border: 1.5px dashed rgba(151, 91, 35, 0.32);
+  border-radius: 14px;
+  opacity: 0;
+  animation: taskPulse 2.1s ease-out infinite;
+  pointer-events: none;
+}
+
+.taskButton {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px 9px;
+  border: none;
+  border-left: 4px solid rgba(92, 58, 28, 0.82);
+  border-radius: 0 12px 12px 0;
+  background: rgba(247, 236, 208, 0.78);
+  box-shadow: 0 4px 10px rgba(92, 58, 28, 0.08);
+  backdrop-filter: blur(1px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2px;
+  position: relative;
+  animation: taskFloat 2.1s ease-in-out infinite;
+  z-index: 1;
+}
+
+.taskButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.taskButton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.taskButton:focus-visible {
+  outline: none;
+  box-shadow:
+    0 4px 10px rgba(92, 58, 28, 0.08),
+    0 0 0 3px rgba(181, 128, 66, 0.22);
+}
+
+.taskLabel {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: rgba(93, 62, 33, 0.66);
+  font-weight: 600;
+}
+
+.taskText {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.15;
+  color: #432818;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: "IBM Plex Sans", "Avenir Next", "PingFang SC", "Noto Sans SC",
+    sans-serif;
+  font-weight: 500;
 }
 
 .menuBtn {
   position: absolute;
-  border: none;
-  padding: 0;
+  z-index: 80;
+  border: 2px solid #5b3b22;
+  border-radius: 16px;
+  padding: 3px;
   margin: 0;
-  background: transparent;
+  background:
+    linear-gradient(180deg, #ead4a8 0%, #dfc08a 100%);
+  box-shadow:
+    0 2px 0 rgba(91, 59, 34, 0.9),
+    0 5px 10px rgba(88, 60, 34, 0.16);
   cursor: pointer;
-  display: block;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  overflow: visible;
+  transform: none;
 }
 
 .menuBtn:disabled {
   cursor: default;
+}
+
+.menuBtn::before,
+.menuBtn::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.menuBtn::before {
+  left: 10px;
+  right: 10px;
+  top: 7px;
+  bottom: 7px;
+  border: 1px dashed rgba(95, 62, 34, 0.36);
+  border-radius: 12px;
+  opacity: 0.9;
+}
+
+.menuBtn::after {
+  width: 38px;
+  height: 12px;
+  top: -5px;
+  left: 50%;
+  background:
+    linear-gradient(180deg, rgba(238, 220, 170, 0.96), rgba(223, 198, 145, 0.96));
+  border: 1px solid rgba(122, 95, 57, 0.22);
+  border-radius: 3px;
+  opacity: 0.92;
+  transform: translateX(-50%);
+}
+
+.menuBtnInner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(244, 229, 190, 0.98) 0%, rgba(231, 206, 151, 0.98) 100%);
+}
+
+.menuBtnInner::before,
+.menuBtnInner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.menuBtnInner::before {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 249, 231, 0.34) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 78% 38%, rgba(117, 89, 52, 0.08) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 44% 68%, rgba(255, 248, 226, 0.22) 0 1px, transparent 1.4px);
+  background-size: 26px 22px, 31px 28px, 24px 20px;
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+
+.menuBtnInner::after {
+  inset: 2px;
+  border-top: 1px solid rgba(255, 248, 226, 0.38);
+  border-bottom: 1px solid rgba(126, 89, 48, 0.14);
+}
+
+.menuBtnKicker {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(92, 59, 31, 0.72);
+  font-weight: 600;
+}
+
+.menuBtnLabel {
+  font-size: 21px;
+  line-height: 1;
+  color: #402414;
+  font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
+    "STKaiti", cursive;
+  text-shadow: 0.5px 0.5px 0 rgba(255, 245, 220, 0.45);
 }
 
 .trainingBtn {
@@ -88,6 +350,20 @@
   height: 56px;
 }
 
+.menuBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 3px 0 rgba(91, 59, 34, 0.9),
+    0 7px 12px rgba(88, 60, 34, 0.16);
+}
+
+.menuBtn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow:
+    0 1px 0 rgba(91, 59, 34, 0.9),
+    0 3px 6px rgba(88, 60, 34, 0.12);
+}
+
 .hotspot {
   position: absolute;
   border: none;
@@ -103,6 +379,14 @@
   top: 248px;
   width: 230px;
   height: 318px;
+}
+
+.leaderboardHotspot {
+  left: 4px;
+  top: 530px;
+  width: 276px;
+  height: 302px;
+  z-index: 18;
 }
 
 .dailyTagHotspot {
@@ -148,6 +432,59 @@
   }
 }
 
+@keyframes characterBob {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-8px) scale(1.012);
+  }
+  70% {
+    transform: translateY(-3px) scale(0.996);
+  }
+}
+
+@keyframes characterShadow {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: scaleX(1);
+  }
+  35% {
+    opacity: 0.09;
+    transform: scaleX(0.88);
+  }
+  70% {
+    opacity: 0.13;
+    transform: scaleX(0.95);
+  }
+}
+
+@keyframes taskFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes taskPulse {
+  0% {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.58;
+  }
+  100% {
+    transform: scale(1.02);
+    opacity: 0;
+  }
+}
+
 @keyframes stageSink {
   0% {
     transform: scale(var(--runtime-scale, 1));
@@ -189,4 +526,13 @@
   color: #111827;
   padding: 6px 10px;
   font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .characterLayer,
+  .characterLayer::after,
+  .taskLayer::after,
+  .taskButton {
+    animation: none;
+  }
 }

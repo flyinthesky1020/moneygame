@@ -13,12 +13,13 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("runs")
       .select(
-        "id,user_id,date_key,total_return_pct,final_bankroll,n,win_count,avg_buy_ratio,style_tag,style_text,completed_at"
+        "id,user_id,date_key,total_return_pct,total_profit,final_bankroll,n,win_count,avg_buy_ratio,style_tag,style_text,completed_at"
       )
       .eq("mode", "daily")
       .eq("date_key", dateKey)
       .eq("completed", true)
       .order("total_return_pct", { ascending: false })
+      .order("completed_at", { ascending: true })
       .limit(100);
 
     if (error) {

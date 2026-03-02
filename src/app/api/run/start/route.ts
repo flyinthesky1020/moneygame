@@ -58,35 +58,6 @@ export async function POST(req: NextRequest) {
     const supabase = getSupabaseServerClient();
     const dateKey = getSingaporeDateKey();
 
-    if (mode === "daily") {
-      const { data: existingRun, error: existingErr } = await supabase
-        .from("runs")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("mode", "daily")
-        .eq("date_key", dateKey)
-        .eq("completed", true)
-        .limit(1)
-        .maybeSingle();
-
-      if (existingErr) {
-        return NextResponse.json(
-          { message: existingErr.message },
-          { status: 500 }
-        );
-      }
-
-      if (existingRun?.id) {
-        return NextResponse.json(
-          {
-            message: "You already completed daily challenge today.",
-            existing_run_id: existingRun.id,
-          },
-          { status: 409 }
-        );
-      }
-    }
-
     const questionCount = mode === "daily" ? 50 : 10;
     const { data: allQuestionIds, error: idsErr } = await supabase
       .from("questions")

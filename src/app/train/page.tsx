@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import EntryRedirect from "@/components/EntryRedirect";
 
 export default function TrainEntryPage() {
-  redirect("/play?mode=train");
+  return <EntryRedirect to="/play?mode=train" />;
 }

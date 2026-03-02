@@ -1,0 +1,143 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hero {
+  border: 2px solid rgba(93, 61, 31, 0.82);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(250, 241, 219, 0.96), rgba(239, 220, 181, 0.96));
+  box-shadow:
+    0 3px 0 rgba(93, 61, 31, 0.74),
+    0 10px 20px rgba(93, 61, 31, 0.08);
+  padding: 18px 18px 16px;
+}
+
+.heroTitle {
+  font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
+    "STKaiti", cursive;
+  color: #4a2e1a;
+}
+
+.heroText {
+  margin-top: 8px;
+  color: rgba(74, 46, 26, 0.72);
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historyCard {
+  border: 2px solid rgba(93, 61, 31, 0.22);
+  border-radius: 18px;
+  background: rgba(255, 251, 244, 0.92);
+  box-shadow: 0 6px 14px rgba(93, 61, 31, 0.06);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.historyHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.summaryLeft {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summaryName,
+.summaryMode,
+.summaryTime {
+  color: #3d2617;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.summaryMode {
+  color: rgba(74, 46, 26, 0.68);
+}
+
+.summaryTime {
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.returnUp {
+  color: #c63d32;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.returnDown {
+  color: #2f8a4b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.metricsLine {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  align-items: center;
+  color: rgba(74, 46, 26, 0.82);
+  font-size: 14px;
+}
+
+.metricsLine > span {
+  white-space: nowrap;
+}
+
+.metricsLine > span:first-child {
+  text-align: left;
+}
+
+.metricsLine > span:not(:first-child) {
+  text-align: right;
+}
+
+.metricInline {
+  color: rgba(74, 46, 26, 0.82);
+  font-size: 14px;
+}
+
+.empty {
+  border: 2px dashed rgba(93, 61, 31, 0.28);
+  border-radius: 18px;
+  padding: 20px 16px;
+  text-align: center;
+  color: rgba(90, 59, 31, 0.72);
+  background: rgba(255, 250, 242, 0.72);
+}
+
+@media (max-width: 640px) {
+  .summaryName,
+  .summaryMode,
+  .summaryTime,
+  .metricsLine,
+  .metricInline,
+  .returnUp,
+  .returnDown {
+    font-size: 13px;
+  }
+
+  .historyHead {
+    align-items: flex-start;
+  }
+
+  .summaryLeft {
+    flex-wrap: wrap;
+  }
+}

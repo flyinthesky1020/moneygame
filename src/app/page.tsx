@@ -2,32 +2,74 @@
 
 import Image from "next/image";
 import type { CSSProperties } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FINANCE_SCHOLAR_NAMES, pickScholarNames } from "@/lib/financeScholarNames";
+import { readCachedRunRecords, resolveCurrentHomeTask } from "@/lib/homeTaskProgress";
 import styles from "./page.module.css";
 
 const STAGE_WIDTH = 390;
 const STAGE_HEIGHT = 844;
 const MOUTH_X = 196;
 const MOUTH_Y = 408;
+const VIEWPORT_PADDING = 20;
+
+type HomeLeaderboardRow = {
+  id: string;
+  user_id: string;
+  total_return_pct: number;
+};
+
+type HomeLeaderboardResponse = {
+  date_key: string;
+  leaderboard: HomeLeaderboardRow[];
+};
 
 export default function HomePage() {
   const router = useRouter();
+  const viewportRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
   const [transitioning, setTransitioning] = useState(false);
   const [debug, setDebug] = useState(false);
+  const [taskText, setTaskText] = useState("完成一次练习模式");
+  const [taskTargetPath, setTaskTargetPath] = useState<"/play?mode=train" | "/play?mode=daily">("/play?mode=train");
+  const [homeTopThree, setHomeTopThree] = useState<HomeLeaderboardRow[]>([]);
+  const [leaderboardDateKey, setLeaderboardDateKey] = useState("default");
+
+  useEffect(() => {
+    document.body.classList.add("home-mode-body");
+    return () => document.body.classList.remove("home-mode-body");
+  }, []);
 
   useEffect(() => {
     const updateScale = () => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      const viewportWidth = viewport.clientWidth;
+      const viewportHeight = viewport.clientHeight;
       const nextScale = Math.min(
-        window.innerWidth / STAGE_WIDTH,
-        window.innerHeight / STAGE_HEIGHT
+        (viewportWidth - VIEWPORT_PADDING * 2) / STAGE_WIDTH,
+        (viewportHeight - VIEWPORT_PADDING * 2) / STAGE_HEIGHT,
+        1
       );
-      setScale(nextScale);
+      setScale(Math.max(nextScale, 0.35));
     };
+
     updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
+
+    const resizeObserver = new ResizeObserver(() => updateScale());
+    if (viewportRef.current) {
+      resizeObserver.observe(viewportRef.current);
+    }
+
+    window.addEventListener("orientationchange", updateScale);
+    window.visualViewport?.addEventListener("resize", updateScale);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("orientationchange", updateScale);
+      window.visualViewport?.removeEventListener("resize", updateScale);
+    };
   }, []);
 
   useEffect(() => {
@@ -40,6 +82,59 @@ export default function HomePage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  useEffect(() => {
+    const syncTaskText = () => {
+      const currentTask = resolveCurrentHomeTask(readCachedRunRecords());
+      setTaskText(
+        currentTask.completed
+          ? "全部任务已完成"
+          : currentTask.task?.label ?? ""
+      );
+      setTaskTargetPath(
+        currentTask.task?.targetMode === "daily"
+          ? "/play?mode=daily"
+          : "/play?mode=train"
+      );
+    };
+
+    syncTaskText();
+    window.addEventListener("focus", syncTaskText);
+    window.addEventListener("storage", syncTaskText);
+    return () => {
+      window.removeEventListener("focus", syncTaskText);
+      window.removeEventListener("storage", syncTaskText);
+    };
+  }, []);
+
+  useEffect(() => {
+    let canceled = false;
+
+    async function loadHomeLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard");
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json?.message ?? "加载首页榜单失败");
+        }
+        if (!canceled) {
+          const payload = json as HomeLeaderboardResponse;
+          setLeaderboardDateKey(payload.date_key || "default");
+          setHomeTopThree((payload.leaderboard ?? []).slice(0, 3));
+        }
+      } catch {
+        if (!canceled) {
+          setHomeTopThree([]);
+          setLeaderboardDateKey("default");
+        }
+      }
+    }
+
+    void loadHomeLeaderboard();
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
   const stageStyle = useMemo(
     () =>
       ({
@@ -48,21 +143,32 @@ export default function HomePage() {
       }) as CSSProperties,
     [scale]
   );
+  const homeTopAliases = useMemo(
+    () => pickScholarNames(leaderboardDateKey, 3),
+    [leaderboardDateKey]
+  );
 
   async function enterDaily() {
     if (transitioning) return;
     setTransitioning(true);
     await new Promise((resolve) => setTimeout(resolve, 900));
-    router.push("/daily");
+    router.push("/play?mode=daily");
   }
 
-  function navigate(path: "/train" | "/record" | "/team") {
+  function navigate(
+    path:
+      | "/play?mode=train"
+      | "/play?mode=daily"
+      | "/record"
+      | "/team"
+      | "/leaderboard"
+  ) {
     if (transitioning) return;
     router.push(path);
   }
 
   return (
-    <div className={styles.viewport}>
+    <div ref={viewportRef} className={styles.viewport}>
       <div
         className={`${styles.stageScale} ${transitioning ? styles.sink : ""}`}
         style={stageStyle}
@@ -114,22 +220,69 @@ export default function HomePage() {
             />
           </div>
 
+          {homeTopThree.length > 0 ? (
+            <div
+              className={`${styles.layer} ${styles.homePodiumLayer} ${
+                debug ? styles.debug : ""
+              }`}
+            >
+              {homeTopThree.map((row, index) => (
+                <div
+                  key={row.id}
+                  className={`${styles.homePodiumItem} ${styles[`homePodiumItem${index + 1}`]}`}
+                >
+                  <span className={styles.homePodiumRank}>#{index + 1}</span>
+                  <span className={styles.homePodiumName}>
+                    {homeTopAliases[index] ?? FINANCE_SCHOLAR_NAMES[index]}
+                  </span>
+                  <span className={styles.homePodiumReturn}>
+                    {(row.total_return_pct * 100).toFixed(2)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          <button
+            type="button"
+            className={`${styles.hotspot} ${styles.leaderboardHotspot} ${
+              debug ? styles.debug : ""
+            }`}
+            onClick={() => navigate("/leaderboard")}
+            disabled={transitioning}
+            aria-label="进入排行榜"
+          />
+
+          <div
+            className={`${styles.layer} ${styles.taskLayer} ${
+              debug ? styles.debug : ""
+            }`}
+          >
+            <button
+              type="button"
+              className={styles.taskButton}
+              onClick={() => navigate(taskTargetPath)}
+              disabled={transitioning}
+              aria-label={`进入${taskTargetPath === "/play?mode=daily" ? "每日挑战" : "练习模式"}`}
+            >
+              <span className={styles.taskLabel}>当前任务</span>
+              <p className={styles.taskText}>{taskText}</p>
+            </button>
+          </div>
+
           <button
             type="button"
             className={`${styles.menuBtn} ${styles.trainingBtn} ${
               debug ? styles.debug : ""
             }`}
-            onClick={() => navigate("/train")}
+            onClick={() => navigate("/play?mode=train")}
             disabled={transitioning}
             aria-label="训练模式"
           >
-            <Image
-              src="/assets/btn_training.webp"
-              alt=""
-              fill
-              sizes="390px"
-              aria-hidden
-            />
+            <span className={styles.menuBtnInner}>
+              <span className={styles.menuBtnKicker}>Practice</span>
+              <span className={styles.menuBtnLabel}>韭皇练习场</span>
+            </span>
           </button>
 
           <button
@@ -141,7 +294,10 @@ export default function HomePage() {
             disabled={transitioning}
             aria-label="我的成绩"
           >
-            <Image src="/assets/btn_record.webp" alt="" fill sizes="390px" aria-hidden />
+            <span className={styles.menuBtnInner}>
+              <span className={styles.menuBtnKicker}>Record</span>
+              <span className={styles.menuBtnLabel}>我的成绩</span>
+            </span>
           </button>
 
           <button
@@ -153,7 +309,10 @@ export default function HomePage() {
             disabled={transitioning}
             aria-label="制作团队"
           >
-            <Image src="/assets/btn_team.webp" alt="" fill sizes="390px" aria-hidden />
+            <span className={styles.menuBtnInner}>
+              <span className={styles.menuBtnKicker}>About</span>
+              <span className={styles.menuBtnLabel}>制作团队</span>
+            </span>
           </button>
 
           <button

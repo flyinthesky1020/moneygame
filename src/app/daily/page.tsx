@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import EntryRedirect from "@/components/EntryRedirect";
 
 export default function DailyEntryPage() {
-  redirect("/play?mode=daily");
+  return <EntryRedirect to="/play?mode=daily" />;
 }

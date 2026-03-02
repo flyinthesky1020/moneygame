@@ -35,6 +35,8 @@ html,
 body {
   padding: 0;
   margin: 0;
+  width: 100%;
+  min-height: 100%;
 }
 
 body {
@@ -49,6 +51,21 @@ body {
 
 body.play-mode-body {
   background: rgb(242, 231, 211);
+}
+
+body.home-mode-body {
+  background: rgb(242, 231, 211);
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body.home-mode-body main {
+  width: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 body.result-mode-body {

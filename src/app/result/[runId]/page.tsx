@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import SharePosterCanvas from "@/components/SharePosterCanvas";
+import { cacheCompletedRun } from "@/lib/homeTaskProgress";
+import { cacheScoreHistory } from "@/lib/scoreHistory";
 
 type RunResult = {
   id?: string;
@@ -90,6 +92,27 @@ export default function ResultPage() {
             safeSetNickname(runId, nickname);
           }
           if (!canceled) {
+            cacheCompletedRun({
+              runId,
+              mode: cached.mode,
+              dateKey: "",
+              completedAt: cached.completed_at ?? new Date(0).toISOString(),
+              totalProfit: cached.total_profit,
+              totalReturnPct: cached.total_return_pct,
+              winDays: cached.win_days ?? cached.win_count ?? 0,
+              lossDays: cached.loss_days ?? 0,
+              idleDays: cached.idle_days ?? 0,
+            });
+            cacheScoreHistory({
+              runId,
+              nickname,
+              mode: cached.mode,
+              totalReturnPct: cached.total_return_pct,
+              winDays: cached.win_days ?? cached.win_count ?? 0,
+              lossDays: cached.loss_days ?? 0,
+              idleDays: cached.idle_days ?? 0,
+              completedAt: cached.completed_at ?? new Date(0).toISOString(),
+            });
             setData({
               ...cached,
               nickname,
@@ -111,6 +134,27 @@ export default function ResultPage() {
           curve: Array.isArray(json.curve) ? json.curve : [0],
           nickname: safeGetNickname(runId),
         };
+        cacheCompletedRun({
+          runId,
+          mode: normalized.mode,
+          dateKey: typeof json.date_key === "string" ? json.date_key : "",
+          completedAt: normalized.completed_at ?? new Date(0).toISOString(),
+          totalProfit: normalized.total_profit,
+          totalReturnPct: normalized.total_return_pct,
+          winDays: normalized.win_days ?? normalized.win_count ?? 0,
+          lossDays: normalized.loss_days ?? 0,
+          idleDays: normalized.idle_days ?? 0,
+        });
+        cacheScoreHistory({
+          runId,
+          nickname: normalized.nickname ?? "",
+          mode: normalized.mode,
+          totalReturnPct: normalized.total_return_pct,
+          winDays: normalized.win_days ?? normalized.win_count ?? 0,
+          lossDays: normalized.loss_days ?? 0,
+          idleDays: normalized.idle_days ?? 0,
+          completedAt: normalized.completed_at ?? new Date(0).toISOString(),
+        });
         safeSetNickname(runId, normalized.nickname ?? "");
         sessionStorage.setItem(`run_result:${runId}`, JSON.stringify(normalized));
         if (!canceled) {

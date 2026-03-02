@@ -7,10 +7,12 @@ import CandlestickWithVolume, {
 } from "@/components/CandlestickWithVolume";
 import BuyRatioSelector from "@/components/BuyRatioSelector";
 import { START_BANKROLL } from "@/lib/gameMath";
+import { cacheCompletedRun } from "@/lib/homeTaskProgress";
 import { pickRandomPlayQuote } from "@/lib/playQuotes";
 import {
   resolveRoundFeedbackText,
 } from "@/lib/playRoundFeedback";
+import { cacheScoreHistory } from "@/lib/scoreHistory";
 
 type Mode = "train" | "daily";
 
@@ -41,6 +43,7 @@ type RoundFeedback = AnswerResponse & {
 type FinishResponse = {
   run_id: string;
   mode: Mode;
+  date_key: string;
   n: number;
   total_profit: number;
   total_return_pct: number;
@@ -320,6 +323,27 @@ export default function PlayClient() {
         `run_result:${runState.run_id}`,
         JSON.stringify(finishData)
       );
+      cacheCompletedRun({
+        runId: runState.run_id,
+        mode: finishData.mode,
+        dateKey: finishData.date_key,
+        completedAt: finishData.completed_at,
+        totalProfit: finishData.total_profit,
+        totalReturnPct: finishData.total_return_pct,
+        winDays: finishData.win_days ?? finishData.win_count ?? 0,
+        lossDays: finishData.loss_days ?? 0,
+        idleDays: finishData.idle_days ?? 0,
+      });
+      cacheScoreHistory({
+        runId: runState.run_id,
+        nickname,
+        mode: finishData.mode,
+        totalReturnPct: finishData.total_return_pct,
+        winDays: finishData.win_days ?? finishData.win_count ?? 0,
+        lossDays: finishData.loss_days ?? 0,
+        idleDays: finishData.idle_days ?? 0,
+        completedAt: finishData.completed_at,
+      });
       safeSetNickname(runState.run_id, nickname);
       router.push(`/result/${runState.run_id}`);
     } catch (e) {

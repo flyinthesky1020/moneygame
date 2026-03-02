@@ -58,32 +58,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Run already completed", run_id: runId });
     }
 
-    if (runRow.mode === "daily") {
-      const { data: existingDailyRun, error: dailyErr } = await supabase
-        .from("runs")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("mode", "daily")
-        .eq("date_key", runRow.date_key)
-        .eq("completed", true)
-        .neq("id", runId)
-        .limit(1)
-        .maybeSingle();
-
-      if (dailyErr) {
-        return NextResponse.json({ message: dailyErr.message }, { status: 500 });
-      }
-      if (existingDailyRun?.id) {
-        return NextResponse.json(
-          {
-            message: "Daily run already completed for today",
-            existing_run_id: existingDailyRun.id,
-          },
-          { status: 409 }
-        );
-      }
-    }
-
     const { data: answers, error: ansErr } = await supabase
       .from("run_answers")
       .select("index_in_run,buy_ratio,profit,cum_profit_after")

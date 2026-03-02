@@ -161,11 +161,14 @@ export default function SharePosterCanvas({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const currentCanvas = canvas;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const currentCtx = ctx;
     let canceled = false;
 
     async function drawPoster() {
+      const ctx = currentCtx;
       let qrImage: HTMLImageElement | null = null;
       try {
         qrImage = await loadImage(
@@ -176,8 +179,8 @@ export default function SharePosterCanvas({
       }
       if (canceled) return;
 
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = currentCanvas.width;
+      const h = currentCanvas.height;
       ctx.clearRect(0, 0, w, h);
 
       ctx.fillStyle = "#f2dfb5";
