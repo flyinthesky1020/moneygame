@@ -1,17 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { pickSharePosterQuote } from "@/lib/sharePosterQuotes";
-
-type WeChatWindow = Window & {
-  WeixinJSBridge?: {
-    invoke: (
-      method: string,
-      params: Record<string, string>,
-      callback?: (res: { err_msg?: string }) => void
-    ) => void;
-  };
-};
 
 type Props = {
   runId: string;
@@ -142,9 +133,7 @@ export default function SharePosterCanvas({
   styleText,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const saveLockRef = useRef(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [shareNotice, setShareNotice] = useState("");
+  const [posterDataUrl, setPosterDataUrl] = useState("");
   const upColor = "#c63d32";
   const downColor = "#2f8a4b";
   const trendColor = totalReturnPct >= 0 ? upColor : downColor;
@@ -162,16 +151,7 @@ export default function SharePosterCanvas({
     () => `${totalProfit >= 0 ? "+" : ""}${totalProfit.toFixed(2)}元`,
     [totalProfit]
   );
-  const fileName = useMemo(() => `run-${runId}-poster.png`, [runId]);
   const dateText = useMemo(() => formatDateLabel(completedAt), [completedAt]);
-  const isLikelyMobile = useMemo(() => {
-    if (typeof navigator === "undefined") return false;
-    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  }, []);
-  const isWeChat = useMemo(() => {
-    if (typeof navigator === "undefined") return false;
-    return /MicroMessenger/i.test(navigator.userAgent);
-  }, []);
   const posterQuote = useMemo(
     () => pickSharePosterQuote(runId, totalProfit),
     [runId, totalProfit]
@@ -367,6 +347,7 @@ export default function SharePosterCanvas({
         ctx.lineWidth = 3;
         ctx.strokeRect(qrX, qrY, qrSize, qrSize);
       }
+      setPosterDataUrl(currentCanvas.toDataURL("image/png"));
     }
 
     void drawPoster();
@@ -390,99 +371,36 @@ export default function SharePosterCanvas({
     winDays,
   ]);
 
-  async function invokeWeChatShare(imageDataUrl: string): Promise<boolean> {
-    if (typeof window === "undefined") return false;
-    const bridge = (window as WeChatWindow).WeixinJSBridge;
-    if (!bridge) return false;
-
-    return new Promise((resolve) => {
-      bridge.invoke(
-        "sendAppMessage",
-        {
-          title: `${displayNickname} 的交易战绩`,
-          desc: `收益率 ${pctText}，来看看我的战绩海报`,
-          link: window.location.href,
-          img_url: imageDataUrl,
-          img_width: "300",
-          img_height: "300",
-        },
-        (res) => {
-          resolve(Boolean(res?.err_msg?.includes(":ok")));
-        }
-      );
-    });
-  }
-
-  async function handleShare() {
-    const canvas = canvasRef.current;
-    if (!canvas || isSaving || saveLockRef.current) return;
-
-    saveLockRef.current = true;
-    setIsSaving(true);
-    setShareNotice("");
-    try {
-      const blob: Blob | null = await new Promise((resolve) => {
-        canvas.toBlob(resolve, "image/png");
-      });
-      if (!blob) return;
-
-      const mobileShare =
-        isLikelyMobile &&
-        typeof navigator !== "undefined" &&
-        "canShare" in navigator &&
-        "share" in navigator;
-
-      if (mobileShare) {
-        const file = new File([blob], fileName, { type: "image/png" });
-        const nav = navigator as Navigator & {
-          canShare?: (data: ShareData) => boolean;
-        };
-        if (nav.canShare?.({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `${displayNickname} 的交易战绩海报`,
-              text: "分享我的交易战绩",
-            });
-            return;
-          } catch {
-            // fall through to other share options
-          }
-        }
-      }
-
-      if (isWeChat) {
-        const dataUrl = canvas.toDataURL("image/png");
-        const ok = await invokeWeChatShare(dataUrl);
-        if (ok) {
-          return;
-        }
-        setShareNotice("微信环境限制了直达分享，请点右上角“...”选择“发送给朋友”。");
-        return;
-      }
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      setShareNotice("当前环境暂不支持直接分享，已为你下载图片。");
-    } finally {
-      saveLockRef.current = false;
-      setIsSaving(false);
-    }
-  }
-
   return (
     <div className="result-poster-wrap">
-      <canvas ref={canvasRef} width={1080} height={1800} className="result-poster-canvas" />
-      <button type="button" className="result-save-btn" onClick={handleShare} disabled={isSaving}>
-        {isSaving ? "分享中..." : "分享战绩"}
-      </button>
-      {shareNotice ? <p className="result-share-tip">{shareNotice}</p> : null}
+      <canvas ref={canvasRef} width={1080} height={1800} className="result-poster-source" />
+      {posterDataUrl ? (
+        <Image
+          src={posterDataUrl}
+          alt="战绩结算海报"
+          width={1080}
+          height={1800}
+          unoptimized
+          className="result-poster-canvas"
+          draggable={false}
+        />
+      ) : (
+        <div className="result-poster-canvas result-poster-placeholder" />
+      )}
+      <div className="result-save-btn result-save-hint" aria-label="长按图片保存">
+        {posterDataUrl ? (
+          <Image
+            src={posterDataUrl}
+            alt=""
+            width={1080}
+            height={1800}
+            unoptimized
+            className="result-save-touch-image"
+            draggable={false}
+          />
+        ) : null}
+        <span className="result-save-hint-text">长按图片保存</span>
+      </div>
     </div>
   );
 }

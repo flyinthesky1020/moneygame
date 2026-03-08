@@ -14,7 +14,7 @@ const MOUTH_X = 196;
 const MOUTH_Y = 408;
 const VIEWPORT_PADDING = 20;
 const DIALOG_STEP_MS = 500;
-const INTRO_SEEN_KEY = "home_intro_seen:v1";
+const INTRO_SEEN_KEY = "home_intro_seen:v2";
 const INTRO_ROUNDS = [
   [
     { speaker: "你", text: "我今年能赚多少？" },
@@ -63,6 +63,7 @@ export default function HomePage() {
   const [introEntering, setIntroEntering] = useState(false);
   const [introHydrated, setIntroHydrated] = useState(false);
   const introVisibleRef = useRef(0);
+  const introDialogListRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     document.body.classList.add("home-mode-body");
@@ -203,6 +204,13 @@ export default function HomePage() {
       window.clearInterval(timer);
     };
   }, [introDialogs.length, showIntro]);
+
+  useEffect(() => {
+    if (!showIntro) return;
+    const el = introDialogListRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [introShownDialogs.length, showIntro]);
 
   async function enterDaily() {
     if (transitioning || dailyLoading) return;
@@ -423,7 +431,7 @@ export default function HomePage() {
             </div>
           ) : (
             <section className={styles.introPanel}>
-              <div className={styles.introDialogList}>
+              <div ref={introDialogListRef} className={styles.introDialogList}>
                 {introShownDialogs.map((dialog, index) => (
                   <div
                     key={`${dialog.speaker}-${index}`}
