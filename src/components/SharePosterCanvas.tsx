@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import NextImage from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { pickSharePosterQuote } from "@/lib/sharePosterQuotes";
 
@@ -375,7 +375,7 @@ export default function SharePosterCanvas({
     <div className="result-poster-wrap">
       <canvas ref={canvasRef} width={1080} height={1800} className="result-poster-source" />
       {posterDataUrl ? (
-        <Image
+        <NextImage
           src={posterDataUrl}
           alt="战绩结算海报"
           width={1080}
@@ -389,7 +389,7 @@ export default function SharePosterCanvas({
       )}
       <div className="result-save-btn result-save-hint" aria-label="长按图片保存">
         {posterDataUrl ? (
-          <Image
+          <NextImage
             src={posterDataUrl}
             alt=""
             width={1080}
