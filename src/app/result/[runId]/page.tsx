@@ -176,7 +176,11 @@ export default function ResultPage() {
   }, [runId]);
 
   if (loading) {
-    return <div className="stack">结算加载中...</div>;
+    return (
+      <div className="page-loader" role="status" aria-label="页面加载中">
+        <span className="page-loader-spinner" />
+      </div>
+    );
   }
 
   if (error || !data) {

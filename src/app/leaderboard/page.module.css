@@ -2,7 +2,7 @@
   width: min(100%, 960px);
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 18px 14px 24px;
+  padding: 18px 14px 120px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -162,15 +162,54 @@
   color: rgba(88, 58, 33, 0.72);
 }
 
+.currentRow {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 0.9fr) 72px;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 2px solid rgba(93, 61, 31, 0.38);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(246, 226, 178, 0.72), rgba(246, 226, 178, 0.52));
+  box-shadow: 0 6px 14px rgba(93, 61, 31, 0.12);
+}
+
+.currentRank {
+  background: linear-gradient(180deg, #f2d892 0%, #e8bb58 100%);
+  border-color: rgba(135, 92, 33, 0.44);
+}
+
+.mutedValue {
+  color: rgba(90, 59, 31, 0.62);
+}
+
+.currentBar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(100%, 960px);
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(244, 231, 199, 0), rgba(244, 231, 199, 0.96) 28%, rgba(244, 231, 199, 1));
+  z-index: 40;
+}
+
 @media (max-width: 640px) {
   .boardHead,
-  .row {
+  .row,
+  .currentRow {
     grid-template-columns: 58px minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
   }
 
   .boardHead span:last-child,
   .row span:last-child,
-  .row div:last-child {
+  .row div:last-child,
+  .currentRow span:last-child,
+  .currentRow div:last-child {
     display: none;
+  }
+
+  .page {
+    padding-bottom: 108px;
   }
 }

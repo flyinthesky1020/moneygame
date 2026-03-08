@@ -4,8 +4,8 @@
 这是一个虚拟股票交易游戏的 H5 项目骨架，用于快速搭建前端结构与依赖。
 
 ## 当前阶段说明
-当前已完成 MVP 后端 API + 前端核心页面联调（首页启动、做题、结算、结果页、排行榜、海报下载），并进入交互体验细化阶段，可进行端到端演示。
-当前版本：`1.5.0`（首页交互优先级、任务引导与成绩历史已更新）。
+当前已完成 MVP 后端 API + 前端核心页面联调（首页启动、做题、结算、结果页、排行榜、分享海报），并进入正式上线前体验收敛阶段，可进行端到端演示。
+当前版本：`1.6.0`（首页布局收敛、排行榜底栏、结算分享与制作团队页已更新）。
 
 ## 快速接手索引（新会话优先看这里）
 ### 1) 当前状态（2026-03-08）
@@ -15,6 +15,8 @@
 - 做题页顶部指标（进度/总资产/收益率）手机端保持同一行。
 - 做题页背景色与首页一致：`rgb(242, 231, 211)`（`body.play-mode-body`）。
 - 做题页手机端答题按钮（`买入 / 暂且不动`）已改为底部吸附 Bar，适配不同机型与安全区。
+- 做题页除底部答题 Bar 外，主内容区整体下移 `20px`（练习场/竞技场一致）。
+- 每次开启新 run（`daily/train`）进入第一题时，会在买入按钮上方自动弹出“全仓买入并持有 1 天自动卖出”的提示气泡。
 - 结果页背景色与分享页外底一致，采用浅米色纯色底。
 - 做题按钮：`买入`（红）/ `暂且不动`（深蓝）。
 - 涨跌颜色统一规则：`涨红跌绿`（做题页反馈、K线、成交量、MACD、结算海报均已同步）。
@@ -30,16 +32,17 @@
   - 昵称会用于结算页与分享海报。
 - 结果页/分享图：
   - 页面左上角提供极简返回主页按钮；
-  - 分享图为手写卡片风，支持一键保存；
+  - 分享图为手写卡片风，支持一键分享；
   - 左下角展示昵称、日期与扫码引导文案；
   - 右下角展示二维码（当前指向 `chivesgame.com`）；
-  - 手机端“保存图片”按钮文案为“保存到相册”，优先触发系统保存/分享流程，失败时回退下载；
+  - 结算按钮文案已改为“分享战绩”，优先触发系统分享；微信环境会尝试调用分享接口，受环境限制时给出右上角菜单引导；
   - 图表下方文案按收益结果从三组配置文案中稳定随机；
   - 文案作者在文案末行下方右对齐显示；
   - 右上角勋章按总收益率分为 5 档：`技术的神 / 盈利者 / 平淡是福 / 亏损者 / 你就是韭皇`。
 - 首页：
   - 采用 `390x844` 固定舞台等比缩放，保证不同手机机型完整显示全部元素；
   - 首页舞台圆角已移除，避免在部分手机出现黑色边角；
+  - 首页调试悬浮按钮（Debug）已移除，保持上线页面纯净；
   - 右侧三个入口按钮已改为纯 CSS 手绘纸质按钮，不再依赖按钮素材图；
   - `character_daily` 增加轻微呼吸/漂浮动效；
   - `leaderboard` 区域可点击进入排行榜页面；
@@ -54,8 +57,13 @@
 - 排行榜：
   - 排行榜页面改为首页同风格的手绘视觉；
   - 展示数据库中当日每日挑战收益率最高的前 100 条记录；
-  - 每名玩家会稳定映射一个随机金融学者昵称；
+  - 列名已调整为“匿名玩家昵称”，每名玩家仍会稳定映射一个随机学者别名；
   - 金融学者昵称库共 1000 个，不重复。
+  - 底部固定 Bar 新增“我”的当日排名摘要；无成绩时默认显示 `#999+ / 无 / 无`。
+- 制作团队：
+  - `credits` 页面已替换为正式介绍文案；
+  - 页面风格与首页/排行榜统一；
+  - 已接入二维码素材：`public/assets/erweima.webp`。
 - 我的成绩：
   - 展示当前本地缓存的历史成绩记录；
   - 每条记录显示两行：
@@ -112,6 +120,7 @@
 │       ├── btn_team.webp
 │       ├── btn_training.webp
 │       ├── character_daily.webp
+│       ├── erweima.webp
 │       ├── leaderboard.webp
 │       └── title_block.webp
 ├── .env.example
@@ -140,6 +149,7 @@
     │   ├── page.module.css
     │   ├── page.tsx
     │   ├── credits
+    │   │   ├── page.module.css
     │   │   └── page.tsx
     │   ├── daily
     │   │   └── page.tsx
@@ -240,7 +250,7 @@
   - `play` 页顶部显示进度、当前总资产、当前收益率
   - `play` 页模式标题：`韭皇练习场` / `韭皇竞技场`（手写风），已移除标题下小字
   - 最后一题后要求输入昵称，再调用 `finish` 并跳转 `result/[runId]`
-  - `result` 页展示手写风结算海报；手机端“保存到相册”优先走系统保存/分享，失败回退下载
+  - `result` 页展示手写风结算海报；结算按钮为“分享战绩”，优先走系统分享，回退下载
   - `result` 页左上角提供返回主页按钮
   - `leaderboard` 页调用 `/api/leaderboard` 展示当日 Top100（按记录排序，不按用户去重）
   - 排行榜玩家名使用稳定随机金融学者昵称映射
@@ -311,9 +321,6 @@ export function getSingaporeDateKey(date = new Date()): string {
   - `title_block.webp`
   - `character_daily.webp`
   - `leaderboard.webp`
-- 开发辅助：
-  - 页面右上角 `Debug` 开关可显示各图层/热区边界框；
-  - 也可按键盘 `D` 快速开关。
 
 ## 首页像素调校指南（390x844 固定舞台）
 - 舞台基准尺寸固定为 `390 x 844`，所有 `left/top/width/height` 都是该坐标系下的像素值。
@@ -325,16 +332,16 @@ export function getSingaporeDateKey(date = new Date()): string {
 ### 当前图层坐标
 - `.titleLayer`：`left: 30px; top: 64px; width: 330px; height: 168px;`
 - `.characterLayer`：`left: 45px; top: 214px; width: 292px; height: 356px;`
-- `.leaderboardLayer`：`left: 4px; top: 530px; width: 276px; height: 302px;`
-- `.homePodiumLayer`：`left: 16px; top: 486px; width: 254px;`
+- `.leaderboardLayer`：`left: -10px; top: 530px; width: 276px; height: 302px;`
+- `.homePodiumLayer`：`left: 71px; top: 645px; width: 254px;`
 - `.taskLayer`：`left: 50px; top: 530px; width: 250px; min-height: 42px;`
-- `.trainingBtn`：`left: 237px; top: 614px; width: 136px; height: 56px;`
-- `.recordBtn`：`left: 237px; top: 684px; width: 136px; height: 56px;`
-- `.teamBtn`：`left: 237px; top: 754px; width: 136px; height: 56px;`
+- `.trainingBtn`：`left: 250px; top: 600px; width: 136px; height: 56px;`
+- `.recordBtn`：`left: 250px; top: 670px; width: 136px; height: 56px;`
+- `.teamBtn`：`left: 250px; top: 740px; width: 136px; height: 56px;`
 
 ### 当前热区坐标（需与素材联动）
 - `.characterHotspot`：`left: 52px; top: 248px; width: 230px; height: 318px;`
-- `.leaderboardHotspot`：`left: 4px; top: 530px; width: 276px; height: 302px;`
+- `.leaderboardHotspot`：`left: -10px; top: 530px; width: 276px; height: 302px;`
 - `.dailyTagHotspot`：`left: 289px; top: 395px; width: 57px; height: 151px;`
 
 ### 转场嘴部中心（需与角色素材联动）
@@ -344,7 +351,7 @@ export function getSingaporeDateKey(date = new Date()): string {
 - 如果角色素材整体移动/缩放了，需同步更新这两个值，否则“张嘴圆形 + 缩放中心”会偏移。
 
 ### 如何调整素材尺寸并同步热区
-1. 打开首页，点击右上角 `Debug: ON`（或按 `D`），先看图层框与素材是否重合。
+1. 打开首页，先核对素材实际位置与点击命中是否一致（排行榜、角色、每日挑战竖牌、右侧三个按钮）。
 2. 在 `page.module.css` 调整对应图层的 `left/top/width/height`，直到素材位置准确。
 3. 调整 `characterHotspot`、`dailyTagHotspot`，让热区完整覆盖可点击区域。
 4. 若角色嘴部位置变化，在 `page.tsx` 同步更新 `MOUTH_X/MOUTH_Y`。
@@ -434,6 +441,7 @@ export function getSingaporeDateKey(date = new Date()): string {
 - `git fetch --all && git reset --hard origin/main`
 - `npm ci && npm run build`
 - `pm2 restart game && pm2 save`
+- 本地健康检查会自动重试，避免刚重启时端口未就绪导致误报失败
 
 #### 第一步：在服务器上准备 GitHub Actions 专用 SSH 公钥
 1. 在你的本地电脑执行（生成一对新密钥，专门给 GitHub Actions 用）：
@@ -441,10 +449,12 @@ export function getSingaporeDateKey(date = new Date()): string {
 ssh-keygen -t ed25519 -f ~/.ssh/game_deploy_github -C "github-actions-deploy"
 ```
 
-2. 把公钥追加到服务器（按提示输入 root 密码）：
+2. 把公钥追加到服务器（可二选一）：
+- 方式 A（推荐）：
 ```bash
 ssh-copy-id -i ~/.ssh/game_deploy_github.pub root@8.166.136.17
 ```
+- 方式 B（你也可以手动复制 `.pub` 内容，追加到服务器 `~/.ssh/authorized_keys`）
 
 3. 验证新密钥可登录：
 ```bash
@@ -454,9 +464,9 @@ ssh -i ~/.ssh/game_deploy_github -p 22 root@8.166.136.17
 #### 第二步：获取服务器 SSH 指纹（known_hosts）
 在本地执行：
 ```bash
-ssh-keyscan -p 22 8.166.136.17
+ssh-keyscan -p 22 8.166.136.17 2>/dev/null | grep -v '^#'
 ```
-记下输出整行内容（示例格式：`8.166.136.17 ssh-ed25519 AAAA...`），后面要放进 GitHub Secret。
+把输出的非注释行保存下来（推荐至少包含 `ssh-ed25519` 那一行），后面放进 GitHub Secret。
 
 #### 第三步：在 GitHub 仓库配置 Secrets
 进入 GitHub 仓库页面：`Settings -> Secrets and variables -> Actions -> New repository secret`，新增以下 5 个：
@@ -464,7 +474,10 @@ ssh-keyscan -p 22 8.166.136.17
 1. `ECS_HOST` = `8.166.136.17`
 2. `ECS_PORT` = `22`
 3. `ECS_USER` = `root`
-4. `ECS_SSH_KEY` = `~/.ssh/game_deploy_github` 私钥全文（包含 `BEGIN/END OPENSSH PRIVATE KEY`）
+4. `ECS_SSH_KEY_B64` = 私钥的 base64 单行内容（注意是单行，不是原始私钥文本）：
+```bash
+openssl base64 -A -in ~/.ssh/game_deploy_github
+```
 5. `ECS_KNOWN_HOSTS` = 上一步 `ssh-keyscan` 输出整行
 
 #### 第四步：推送工作流并做首次验证
@@ -475,6 +488,7 @@ git push origin main
 ```
 
 然后到 GitHub 仓库 `Actions` 页面查看 `Deploy Game To ECS` 是否成功。
+- 直达地址：`https://github.com/flyinthesky1020/moneygame/actions`
 
 #### 第五步：日常发布方式（以后就这样）
 你只要正常开发并 push 到 `main`：
@@ -484,6 +498,17 @@ git commit -m "feat: your change"
 git push origin main
 ```
 GitHub 会自动把服务器更新到最新版本。
+
+#### 第六步：常见失败与修复（按错误关键字查）
+- `error in libcrypto` / `base64: invalid input`：
+  - 原因：`ECS_SSH_KEY_B64` 内容格式错误（不是单行 base64）。
+  - 修复：重新执行 `openssl base64 -A -in ~/.ssh/game_deploy_github`，完整复制到 `ECS_SSH_KEY_B64`。
+- `Connection timed out during banner exchange`：
+  - 原因：GitHub runner 无法访问服务器 22 端口。
+  - 修复：在阿里云安全组和服务器防火墙放行 `22/tcp` 入站后重试。
+- `curl: (7) Failed to connect to 127.0.0.1 port 3000`：
+  - 原因：重启后服务尚未就绪或启动失败。
+  - 修复：查看 Actions 中自动输出的 `pm2 status` / `pm2 logs game`，按日志排查。
 
 ### 一、前提（只需确认）
 - 服务器目录：`/root/game`

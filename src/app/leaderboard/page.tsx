@@ -18,6 +18,12 @@ type LeaderboardRow = {
 type LeaderboardResponse = {
   date_key: string;
   leaderboard: LeaderboardRow[];
+  current_player: {
+    rank: number;
+    total_return_pct: number;
+    total_profit: number;
+    win_count: number;
+  } | null;
 };
 
 function maskUserId(userId: string) {
@@ -54,6 +60,11 @@ export default function LeaderboardPage() {
     const dateKey = data?.date_key ?? "default";
     return pickScholarNames(dateKey, FINANCE_SCHOLAR_NAMES.length);
   }, [data?.date_key]);
+  const currentRank = data?.current_player?.rank ?? null;
+  const currentReturnPct = data?.current_player?.total_return_pct ?? null;
+  const currentProfit = data?.current_player?.total_profit ?? null;
+  const currentWinCount = data?.current_player?.win_count ?? null;
+
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
@@ -69,7 +80,7 @@ export default function LeaderboardPage() {
       <section className={styles.boardCard}>
         <div className={styles.boardHead}>
           <span>排名</span>
-          <span>金融学者</span>
+          <span>匿名玩家昵称</span>
           <span>收益率</span>
           <span>总收益</span>
           <span>胜场</span>
@@ -109,6 +120,35 @@ export default function LeaderboardPage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      <section className={styles.currentBar}>
+        <div className={styles.currentRow}>
+          <span className={`${styles.rank} ${styles.currentRank}`}>
+            #{currentRank ?? "999+"}
+          </span>
+          <div className={styles.scholar}>
+            <span className={styles.scholarName}>我</span>
+            <span className={styles.scholarMeta}>我的当日最佳成绩</span>
+          </div>
+          <span
+            className={
+              currentReturnPct === null
+                ? styles.mutedValue
+                : currentReturnPct >= 0
+                  ? styles.returnUp
+                  : styles.returnDown
+            }
+          >
+            {currentReturnPct === null ? "无" : `${(currentReturnPct * 100).toFixed(2)}%`}
+          </span>
+          <span className={currentProfit === null ? styles.mutedValue : styles.profitValue}>
+            {currentProfit === null ? "无" : Number(currentProfit).toFixed(2)}
+          </span>
+          <span className={currentWinCount === null ? styles.mutedValue : ""}>
+            {currentWinCount === null ? "无" : currentWinCount}
+          </span>
         </div>
       </section>
     </div>

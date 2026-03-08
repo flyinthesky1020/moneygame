@@ -30,7 +30,7 @@ export default function HomePage() {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
   const [transitioning, setTransitioning] = useState(false);
-  const [debug, setDebug] = useState(false);
+  const [dailyLoading, setDailyLoading] = useState(false);
   const [taskText, setTaskText] = useState("完成一次练习模式");
   const [taskTargetPath, setTaskTargetPath] = useState<"/play?mode=train" | "/play?mode=daily">("/play?mode=train");
   const [homeTopThree, setHomeTopThree] = useState<HomeLeaderboardRow[]>([]);
@@ -70,16 +70,6 @@ export default function HomePage() {
       window.removeEventListener("orientationchange", updateScale);
       window.visualViewport?.removeEventListener("resize", updateScale);
     };
-  }, []);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "d") {
-        setDebug((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   useEffect(() => {
@@ -149,9 +139,8 @@ export default function HomePage() {
   );
 
   async function enterDaily() {
-    if (transitioning) return;
-    setTransitioning(true);
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    if (transitioning || dailyLoading) return;
+    setDailyLoading(true);
     router.push("/play?mode=daily");
   }
 
@@ -163,7 +152,7 @@ export default function HomePage() {
       | "/team"
       | "/leaderboard"
   ) {
-    if (transitioning) return;
+    if (transitioning || dailyLoading) return;
     router.push(path);
   }
 
@@ -180,9 +169,7 @@ export default function HomePage() {
           <div className={styles.bg} />
 
           <div
-            className={`${styles.layer} ${styles.titleLayer} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.layer} ${styles.titleLayer}`}
           >
             <Image
               src="/assets/title_block.webp"
@@ -194,9 +181,7 @@ export default function HomePage() {
           </div>
 
           <div
-            className={`${styles.layer} ${styles.characterLayer} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.layer} ${styles.characterLayer}`}
           >
             <Image
               src="/assets/character_daily.webp"
@@ -208,9 +193,7 @@ export default function HomePage() {
           </div>
 
           <div
-            className={`${styles.layer} ${styles.leaderboardLayer} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.layer} ${styles.leaderboardLayer}`}
           >
             <Image
               src="/assets/leaderboard.webp"
@@ -222,9 +205,7 @@ export default function HomePage() {
 
           {homeTopThree.length > 0 ? (
             <div
-              className={`${styles.layer} ${styles.homePodiumLayer} ${
-                debug ? styles.debug : ""
-              }`}
+              className={`${styles.layer} ${styles.homePodiumLayer}`}
             >
               {homeTopThree.map((row, index) => (
                 <div
@@ -245,24 +226,20 @@ export default function HomePage() {
 
           <button
             type="button"
-            className={`${styles.hotspot} ${styles.leaderboardHotspot} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.hotspot} ${styles.leaderboardHotspot}`}
             onClick={() => navigate("/leaderboard")}
-            disabled={transitioning}
+            disabled={transitioning || dailyLoading}
             aria-label="进入排行榜"
           />
 
           <div
-            className={`${styles.layer} ${styles.taskLayer} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.layer} ${styles.taskLayer}`}
           >
             <button
               type="button"
               className={styles.taskButton}
               onClick={() => navigate(taskTargetPath)}
-              disabled={transitioning}
+              disabled={transitioning || dailyLoading}
               aria-label={`进入${taskTargetPath === "/play?mode=daily" ? "每日挑战" : "练习模式"}`}
             >
               <span className={styles.taskLabel}>当前任务</span>
@@ -272,11 +249,9 @@ export default function HomePage() {
 
           <button
             type="button"
-            className={`${styles.menuBtn} ${styles.trainingBtn} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.menuBtn} ${styles.trainingBtn}`}
             onClick={() => navigate("/play?mode=train")}
-            disabled={transitioning}
+            disabled={transitioning || dailyLoading}
             aria-label="训练模式"
           >
             <span className={styles.menuBtnInner}>
@@ -287,11 +262,9 @@ export default function HomePage() {
 
           <button
             type="button"
-            className={`${styles.menuBtn} ${styles.recordBtn} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.menuBtn} ${styles.recordBtn}`}
             onClick={() => navigate("/record")}
-            disabled={transitioning}
+            disabled={transitioning || dailyLoading}
             aria-label="我的成绩"
           >
             <span className={styles.menuBtnInner}>
@@ -302,11 +275,9 @@ export default function HomePage() {
 
           <button
             type="button"
-            className={`${styles.menuBtn} ${styles.teamBtn} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.menuBtn} ${styles.teamBtn}`}
             onClick={() => navigate("/team")}
-            disabled={transitioning}
+            disabled={transitioning || dailyLoading}
             aria-label="制作团队"
           >
             <span className={styles.menuBtnInner}>
@@ -317,21 +288,17 @@ export default function HomePage() {
 
           <button
             type="button"
-            className={`${styles.hotspot} ${styles.characterHotspot} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.hotspot} ${styles.characterHotspot}`}
             onClick={enterDaily}
-            disabled={transitioning}
+            disabled={transitioning || dailyLoading}
             aria-label="进入今日挑战"
           />
 
           <button
             type="button"
-            className={`${styles.hotspot} ${styles.dailyTagHotspot} ${
-              debug ? styles.debug : ""
-            }`}
+            className={`${styles.hotspot} ${styles.dailyTagHotspot}`}
             onClick={enterDaily}
-            disabled={transitioning}
+            disabled={transitioning || dailyLoading}
             aria-label="进入今日挑战"
           />
 
@@ -346,14 +313,13 @@ export default function HomePage() {
           ) : null}
         </div>
       </div>
-
-      <button
-        type="button"
-        className={styles.debugToggle}
-        onClick={() => setDebug((prev) => !prev)}
-      >
-        {debug ? "Debug: ON" : "Debug: OFF"}
-      </button>
+      {dailyLoading ? (
+        <div className={styles.homeLoadingOverlay}>
+          <div className="page-loader" role="status" aria-label="页面加载中">
+            <span className="page-loader-spinner" />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

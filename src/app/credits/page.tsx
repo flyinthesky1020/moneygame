@@ -1,15 +1,30 @@
+import Image from "next/image";
+import styles from "./page.module.css";
+
 export default function CreditsPage() {
   return (
-    <div className="stack">
-      <div className="page-head">
-        <h1>制作团队</h1>
-        <p className="page-subtitle">占位页：可替换为成员信息、产品理念与版本路线图。</p>
-      </div>
-      <div className="card stack">
-        <p>TODO: 团队成员介绍。</p>
-        <p>TODO: 视觉素材与版权说明。</p>
-        <p>TODO: 联系方式与反馈入口。</p>
-      </div>
+    <div className={`stack ${styles.page}`}>
+      <section className={styles.hero}>
+        <h1 className={styles.title}>制作团队</h1>
+        <p className={styles.heroText}>
+          &emsp;&emsp;Helo，这里是这个简单的韭菜模拟器的创作者小天，产品数据均来自于对真实世界的采样及清洗打散，希望能帮助大家早日摆脱韭菜情结，建立自己的交易方法；
+        </p>
+        <p className={styles.heroText}>
+          &emsp;&emsp;同时在这里招募志同道合的朋友们，一起探索AI的能力边界，共同在这个所谓的AI年代尝试一些自己喜欢的事务吧。
+        </p>
+      </section>
+
+      <section className={styles.qrCard}>
+        <p className={styles.qrHint}>扫码联系我</p>
+        <Image
+          src="/assets/erweima.webp"
+          alt="联系二维码"
+          width={240}
+          height={240}
+          className={styles.qrImage}
+          priority
+        />
+      </section>
     </div>
   );
 }

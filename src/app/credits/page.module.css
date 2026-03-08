@@ -1,0 +1,96 @@
+.page {
+  width: min(100%, 960px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 18px 14px 24px;
+  gap: 14px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 250, 236, 0.72), rgba(255, 250, 236, 0) 34%),
+    linear-gradient(180deg, #f4e7cb 0%, #ecd7ae 100%);
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 18px 16px;
+  border: 2px solid rgba(93, 61, 31, 0.86);
+  border-radius: 24px;
+  background: rgba(250, 241, 219, 0.9);
+  box-shadow:
+    0 3px 0 rgba(93, 61, 31, 0.85),
+    0 10px 20px rgba(93, 61, 31, 0.1);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px dashed rgba(110, 76, 39, 0.3);
+  border-radius: 18px;
+  pointer-events: none;
+}
+
+.title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: clamp(30px, 8vw, 42px);
+  line-height: 1;
+  color: #4b2f1b;
+  font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
+    "STKaiti", cursive;
+}
+
+.heroText {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(70, 47, 27, 0.86);
+  font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
+    "STKaiti", cursive;
+}
+
+.qrCard {
+  border: 2px solid rgba(93, 61, 31, 0.82);
+  border-radius: 22px;
+  background: rgba(250, 242, 224, 0.92);
+  box-shadow: 0 7px 16px rgba(93, 61, 31, 0.08);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.qrHint {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: rgba(74, 46, 26, 0.74);
+}
+
+.qrImage {
+  width: min(240px, 78vw);
+  height: auto;
+  border-radius: 14px;
+  border: 1.5px solid rgba(93, 61, 31, 0.25);
+  box-shadow: 0 8px 20px rgba(93, 61, 31, 0.12);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 14px 10px 18px;
+  }
+
+  .hero {
+    padding: 18px 14px 14px;
+  }
+
+  .heroText {
+    font-size: 14px;
+  }
+}

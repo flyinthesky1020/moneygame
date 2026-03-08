@@ -21,6 +21,7 @@
   width: 390px;
   height: 844px;
   position: relative;
+  top: -30px;
   overflow: hidden;
   border-radius: 0;
 }
@@ -67,14 +68,14 @@
 }
 
 .leaderboardLayer {
-  left: 4px;
+  left: -10px;
   top: 530px;
   width: 276px;
   height: 302px;
 }
 
 .homePodiumLayer {
-  left: 85px;
+  left: 71px;
   top: 645px;
   width: 254px;
   display: flex;
@@ -332,22 +333,22 @@
 }
 
 .trainingBtn {
-  left: 237px;
-  top: 614px;
+  left: 250px;
+  top: 600px;
   width: 136px;
   height: 56px;
 }
 
 .recordBtn {
-  left: 237px;
-  top: 684px;
+  left: 250px;
+  top: 670px;
   width: 136px;
   height: 56px;
 }
 
 .teamBtn {
-  left: 237px;
-  top: 754px;
+  left: 250px;
+  top: 740px;
   width: 136px;
   height: 56px;
 }
@@ -384,7 +385,7 @@
 }
 
 .leaderboardHotspot {
-  left: 4px;
+  left: -10px;
   top: 530px;
   width: 276px;
   height: 302px;
@@ -421,6 +422,17 @@
   opacity: 0;
   animation: fadeBlack 420ms linear 480ms forwards;
   z-index: 70;
+}
+
+.homeLoadingOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  background: rgb(242, 231, 211);
+}
+
+.homeLoadingOverlay :global(.page-loader) {
+  min-height: 100%;
 }
 
 @keyframes mouthOpen {
@@ -509,25 +521,6 @@
   to {
     opacity: 1;
   }
-}
-
-.debug {
-  outline: 1px dashed rgba(26, 88, 198, 0.8);
-  outline-offset: -1px;
-  background-color: rgba(32, 109, 233, 0.08);
-}
-
-.debugToggle {
-  position: fixed;
-  right: 14px;
-  top: 14px;
-  z-index: 999;
-  border: 1px solid #d4d7dc;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #111827;
-  padding: 6px 10px;
-  font-size: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {

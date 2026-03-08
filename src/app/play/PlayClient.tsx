@@ -14,6 +14,7 @@ import {
 import { cacheScoreHistory } from "@/lib/scoreHistory";
 
 type Mode = "train" | "daily";
+const BUY_HINT_TEXT = "为简化操作，点击买入后，会全仓买入后持有1天自动卖出，以模拟短线操作。";
 
 type StartResponse = {
   run_id: string;
@@ -143,6 +144,8 @@ export default function PlayClient() {
   const [nicknameInput, setNicknameInput] = useState("");
   const [nicknameError, setNicknameError] = useState("");
   const [chartHeight, setChartHeight] = useState(360);
+  const [showBuyHint, setShowBuyHint] = useState(false);
+  const [hintRunId, setHintRunId] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.classList.add("play-mode-body");
@@ -259,6 +262,20 @@ export default function PlayClient() {
   const currentReturnPct = (cumProfit / START_BANKROLL) * 100;
   const modeTitle = runState?.mode === "daily" ? "韭皇竞技场" : "韭皇练习场";
 
+  useEffect(() => {
+    if (!showBuyHint) return;
+    const timer = window.setTimeout(() => {
+      setShowBuyHint(false);
+    }, 3200);
+    return () => window.clearTimeout(timer);
+  }, [showBuyHint]);
+
+  useEffect(() => {
+    if (!runState || currentIndex !== 0 || hintRunId === runState.run_id) return;
+    setShowBuyHint(true);
+    setHintRunId(runState.run_id);
+  }, [currentIndex, hintRunId, runState]);
+
   async function submitAnswer(buyRatio: number) {
     if (!runState || !currentQuestion) return;
     try {
@@ -305,6 +322,7 @@ export default function PlayClient() {
 
   function handleSelectOption(value: number) {
     if (submitting || finishing || answerFeedback) return;
+    setShowBuyHint(false);
     setSelectedRatio(value);
     void submitAnswer(value);
   }
@@ -380,7 +398,11 @@ export default function PlayClient() {
   }
 
   if (loading) {
-    return <div className="stack">加载中...</div>;
+    return (
+      <div className="page-loader" role="status" aria-label="页面加载中">
+        <span className="page-loader-spinner" />
+      </div>
+    );
   }
 
   if (error && !runState) {
@@ -403,43 +425,52 @@ export default function PlayClient() {
 
   return (
     <div className="stack play-shell">
-      <div className="page-head play-page-head">
-        <h1 className="play-mode-title-text">{modeTitle}</h1>
-      </div>
+      <div className="play-main-offset">
+        <div className="page-head play-page-head">
+          <h1 className="play-mode-title-text">{modeTitle}</h1>
+        </div>
 
-      <div className="metric-strip play-metric-strip">
-        <div className="metric-cell">
-          <span className="metric-label">进度</span>
-          <span className="metric-value">{progressText}</span>
+        <div className="metric-strip play-metric-strip">
+          <div className="metric-cell">
+            <span className="metric-label">进度</span>
+            <span className="metric-value">{progressText}</span>
+          </div>
+          <div className="metric-cell">
+            <span className="metric-label">当前总资产</span>
+            <span className="metric-value">{currentBankroll.toFixed(2)}</span>
+          </div>
+          <div className="metric-cell">
+            <span className="metric-label">收益率</span>
+            <span className="metric-value">{currentReturnPct.toFixed(2)}%</span>
+          </div>
         </div>
-        <div className="metric-cell">
-          <span className="metric-label">当前总资产</span>
-          <span className="metric-value">{currentBankroll.toFixed(2)}</span>
-        </div>
-        <div className="metric-cell">
-          <span className="metric-label">收益率</span>
-          <span className="metric-value">{currentReturnPct.toFixed(2)}%</span>
-        </div>
-      </div>
 
-      <div className="card play-chart-card">
-        <CandlestickWithVolume candles={currentQuestion.candles} height={chartHeight} />
-        <p className="chart-attribution">
-          Charting library:
-          {" "}
-          <a
-            href="https://www.tradingview.com/lightweight-charts/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            TradingView Lightweight Charts
-          </a>
-        </p>
+        <div className="card play-chart-card">
+          <CandlestickWithVolume candles={currentQuestion.candles} height={chartHeight} />
+          <p className="chart-attribution">
+            Charting library:
+            {" "}
+            <a
+              href="https://www.tradingview.com/lightweight-charts/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              TradingView Lightweight Charts
+            </a>
+          </p>
+        </div>
+
+        {error ? <div className="error-text">{error}</div> : null}
       </div>
 
       <div className="play-bottom-spacer" />
       <div className="play-bottom-bar">
         <div className="card stack play-action-card">
+          {showBuyHint ? (
+            <div className="buy-hint-popover" role="note">
+              {BUY_HINT_TEXT}
+            </div>
+          ) : null}
           <BuyRatioSelector
             value={selectedRatio}
             onChange={handleSelectOption}
@@ -447,8 +478,6 @@ export default function PlayClient() {
           />
         </div>
       </div>
-
-      {error ? <div className="error-text">{error}</div> : null}
 
       {answerFeedback ? (
         <div className="modal-mask">
