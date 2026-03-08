@@ -3,8 +3,8 @@ import HomeBackButton from "@/components/HomeBackButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Virtual Trading Game",
-  description: "H5 virtual trading game MVP skeleton"
+  title: "韭皇养成计划",
+  description: "韭皇养成计划 H5 虚拟交易游戏"
 };
 
 export default function RootLayout({

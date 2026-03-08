@@ -8,7 +8,6 @@ import CandlestickWithVolume, {
 import BuyRatioSelector from "@/components/BuyRatioSelector";
 import { START_BANKROLL } from "@/lib/gameMath";
 import { cacheCompletedRun } from "@/lib/homeTaskProgress";
-import { pickRandomPlayQuote } from "@/lib/playQuotes";
 import {
   resolveRoundFeedbackText,
 } from "@/lib/playRoundFeedback";
@@ -141,14 +140,41 @@ export default function PlayClient() {
   const [finishing, setFinishing] = useState(false);
   const [cumProfit, setCumProfit] = useState(0);
   const [profitHistory, setProfitHistory] = useState<number[]>([]);
-  const [dailyQuote] = useState(() => pickRandomPlayQuote());
   const [nicknameInput, setNicknameInput] = useState("");
   const [nicknameError, setNicknameError] = useState("");
+  const [chartHeight, setChartHeight] = useState(360);
 
   useEffect(() => {
     document.body.classList.add("play-mode-body");
     return () => {
       document.body.classList.remove("play-mode-body");
+    };
+  }, []);
+
+  useEffect(() => {
+    const updateChartHeight = () => {
+      const viewportHeight = window.innerHeight;
+      if (viewportHeight <= 720) {
+        setChartHeight(280);
+        return;
+      }
+      if (viewportHeight <= 820) {
+        setChartHeight(310);
+        return;
+      }
+      if (viewportHeight <= 920) {
+        setChartHeight(340);
+        return;
+      }
+      setChartHeight(370);
+    };
+
+    updateChartHeight();
+    window.addEventListener("resize", updateChartHeight);
+    window.visualViewport?.addEventListener("resize", updateChartHeight);
+    return () => {
+      window.removeEventListener("resize", updateChartHeight);
+      window.visualViewport?.removeEventListener("resize", updateChartHeight);
     };
   }, []);
 
@@ -376,10 +402,9 @@ export default function PlayClient() {
   }
 
   return (
-    <div className="stack">
+    <div className="stack play-shell">
       <div className="page-head play-page-head">
         <h1 className="play-mode-title-text">{modeTitle}</h1>
-        <p className="page-subtitle play-mode-subtitle-text">{dailyQuote}</p>
       </div>
 
       <div className="metric-strip play-metric-strip">
@@ -397,8 +422,8 @@ export default function PlayClient() {
         </div>
       </div>
 
-      <div className="card">
-        <CandlestickWithVolume candles={currentQuestion.candles} />
+      <div className="card play-chart-card">
+        <CandlestickWithVolume candles={currentQuestion.candles} height={chartHeight} />
         <p className="chart-attribution">
           Charting library:
           {" "}
@@ -412,12 +437,15 @@ export default function PlayClient() {
         </p>
       </div>
 
-      <div className="card stack">
-        <BuyRatioSelector
-          value={selectedRatio}
-          onChange={handleSelectOption}
-          disabled={submitting || finishing || Boolean(answerFeedback)}
-        />
+      <div className="play-bottom-spacer" />
+      <div className="play-bottom-bar">
+        <div className="card stack play-action-card">
+          <BuyRatioSelector
+            value={selectedRatio}
+            onChange={handleSelectOption}
+            disabled={submitting || finishing || Boolean(answerFeedback)}
+          />
+        </div>
       </div>
 
       {error ? <div className="error-text">{error}</div> : null}

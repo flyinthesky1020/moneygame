@@ -153,6 +153,10 @@ export default function SharePosterCanvas({
   );
   const fileName = useMemo(() => `run-${runId}-poster.png`, [runId]);
   const dateText = useMemo(() => formatDateLabel(completedAt), [completedAt]);
+  const isLikelyMobile = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  }, []);
   const posterQuote = useMemo(
     () => pickSharePosterQuote(runId, totalProfit),
     [runId, totalProfit]
@@ -172,7 +176,7 @@ export default function SharePosterCanvas({
       let qrImage: HTMLImageElement | null = null;
       try {
         qrImage = await loadImage(
-          `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://www.baidu.com")}`
+          `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://chivesgame.com")}`
         );
       } catch {
         qrImage = null;
@@ -333,7 +337,7 @@ export default function SharePosterCanvas({
       ctx.fillStyle = "#7c6651";
       ctx.fillText(dateText, paperX + 50, footerY + 72);
       ctx.font = `400 24px "IBM Plex Sans", "PingFang SC", sans-serif`;
-      ctx.fillText("扫码看看你是不是看图高手", paperX + 50, footerY + 114);
+      ctx.fillText("扫码访问 chivesgame.com", paperX + 50, footerY + 114);
 
       const qrSize = 170;
       const qrX = paperX + paperW - qrSize - 54;
@@ -383,8 +387,6 @@ export default function SharePosterCanvas({
       });
       if (!blob) return;
 
-      const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-      const isLikelyMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
       const mobileShare =
         isLikelyMobile &&
         typeof navigator !== "undefined" &&
@@ -400,8 +402,8 @@ export default function SharePosterCanvas({
           try {
             await navigator.share({
               files: [file],
-              title: `${displayNickname} 的交易战绩`,
-              text: `挑战记录：/result/${runId}`,
+              title: `${displayNickname} 的交易战绩海报`,
+              text: "点击保存到相册",
             });
             return;
           } catch {
@@ -428,7 +430,7 @@ export default function SharePosterCanvas({
     <div className="result-poster-wrap">
       <canvas ref={canvasRef} width={1080} height={1800} className="result-poster-canvas" />
       <button type="button" className="result-save-btn" onClick={handleSave} disabled={isSaving}>
-        {isSaving ? "保存中..." : "保存图片"}
+        {isSaving ? "保存中..." : isLikelyMobile ? "保存到相册" : "保存图片"}
       </button>
     </div>
   );
