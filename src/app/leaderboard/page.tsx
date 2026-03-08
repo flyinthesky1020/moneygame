@@ -53,7 +53,11 @@ export default function LeaderboardPage() {
   }
 
   useEffect(() => {
+    document.body.classList.add("home-like-body");
     loadBoard();
+    return () => {
+      document.body.classList.remove("home-like-body");
+    };
   }, []);
 
   const aliases = useMemo(() => {

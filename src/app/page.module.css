@@ -435,6 +435,112 @@
   min-height: 100%;
 }
 
+.introOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  background: rgb(242, 231, 211);
+  overflow: hidden;
+}
+
+.introPanel {
+  width: 100%;
+  height: 100%;
+  padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.introDialogList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.introDialogItem {
+  border-radius: 14px;
+  border: 1.5px solid rgba(93, 61, 31, 0.22);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
+    "STKaiti", cursive;
+  color: #3d2617;
+  line-height: 1.5;
+  font-size: 20px;
+}
+
+.introDialogYou {
+  background: rgba(255, 248, 231, 0.88);
+}
+
+.introDialogKing {
+  background: rgba(245, 225, 183, 0.84);
+}
+
+.introSpeaker {
+  font-weight: 700;
+  line-height: 1;
+}
+
+.introDialogYou .introSpeaker {
+  align-self: flex-start;
+}
+
+.introDialogKing .introSpeaker {
+  align-self: flex-end;
+}
+
+.introText {
+  font-weight: 500;
+}
+
+.introBottomBar {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.introAdvanceBtn {
+  width: min(100%, 420px);
+  border: 2px solid #5b3b22;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ead4a8 0%, #dfc08a 100%);
+  color: #402414;
+  font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
+    "STKaiti", cursive;
+  font-size: 28px;
+  line-height: 1;
+  padding: 8px 10px;
+}
+
+.introAdvanceBtn:disabled {
+  opacity: 0.55;
+}
+
+.introEnterHint {
+  margin: 0;
+  text-align: center;
+  color: rgba(74, 46, 26, 0.84);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  font-family: "HanziPen SC", "Ma Shan Zheng", "ZCOOL KuaiLe", "KaiTi",
+    "STKaiti", cursive;
+}
+
+.introLoading {
+  width: 100%;
+  height: 100%;
+}
+
+.introLoading :global(.page-loader) {
+  min-height: 100%;
+}
+
 @keyframes mouthOpen {
   0% {
     transform: translate(-50%, -50%) scale(0.5);

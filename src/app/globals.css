@@ -74,6 +74,12 @@ body.home-mode-body main {
   overflow: hidden;
 }
 
+body.home-like-body {
+  background: rgb(242, 231, 211);
+  width: 100%;
+  min-height: 100dvh;
+}
+
 body.result-mode-body {
   background: #f2dfb5;
 }

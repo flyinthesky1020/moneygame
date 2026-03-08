@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [records, setRecords] = useState<ScoreHistoryRecord[]>([]);
 
   useEffect(() => {
+    document.body.classList.add("home-like-body");
     const syncRecords = () => {
       setRecords(readScoreHistory());
     };
@@ -27,6 +28,7 @@ export default function ProfilePage() {
     window.addEventListener("focus", syncRecords);
     window.addEventListener("storage", syncRecords);
     return () => {
+      document.body.classList.remove("home-like-body");
       window.removeEventListener("focus", syncRecords);
       window.removeEventListener("storage", syncRecords);
     };

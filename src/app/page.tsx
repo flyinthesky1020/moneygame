@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FINANCE_SCHOLAR_NAMES, pickScholarNames } from "@/lib/financeScholarNames";
@@ -13,6 +13,28 @@ const STAGE_HEIGHT = 844;
 const MOUTH_X = 196;
 const MOUTH_Y = 408;
 const VIEWPORT_PADDING = 20;
+const DIALOG_STEP_MS = 500;
+const INTRO_SEEN_KEY = "home_intro_seen:v1";
+const INTRO_ROUNDS = [
+  [
+    { speaker: "你", text: "我今年能赚多少？" },
+    { speaker: "韭皇", text: "-30%" },
+    { speaker: "你", text: "那世界第一交易的神呢？" },
+    { speaker: "韭皇", text: "已经很久没有人这么称呼我了" },
+  ],
+  [
+    { speaker: "你", text: "..." },
+    { speaker: "你", text: "教练，我想学交易！" },
+    { speaker: "韭皇", text: "好的，我给你创造了一个竞技场" },
+  ],
+  [
+    { speaker: "你", text: "竞技场？" },
+    {
+      speaker: "韭皇",
+      text: "没错，交易、判断，赚到就撤，欢迎来到市场...必须要有韭菜...市场才能...保持和平",
+    },
+  ],
+] as const;
 
 type HomeLeaderboardRow = {
   id: string;
@@ -35,10 +57,27 @@ export default function HomePage() {
   const [taskTargetPath, setTaskTargetPath] = useState<"/play?mode=train" | "/play?mode=daily">("/play?mode=train");
   const [homeTopThree, setHomeTopThree] = useState<HomeLeaderboardRow[]>([]);
   const [leaderboardDateKey, setLeaderboardDateKey] = useState("default");
+  const [showIntro, setShowIntro] = useState(true);
+  const [introStep, setIntroStep] = useState(0);
+  const [introVisibleCount, setIntroVisibleCount] = useState(0);
+  const [introEntering, setIntroEntering] = useState(false);
+  const [introHydrated, setIntroHydrated] = useState(false);
+  const introVisibleRef = useRef(0);
 
   useEffect(() => {
     document.body.classList.add("home-mode-body");
     return () => document.body.classList.remove("home-mode-body");
+  }, []);
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem(INTRO_SEEN_KEY) === "1";
+      setShowIntro(!seen);
+    } catch {
+      setShowIntro(true);
+    } finally {
+      setIntroHydrated(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -137,6 +176,33 @@ export default function HomePage() {
     () => pickScholarNames(leaderboardDateKey, 3),
     [leaderboardDateKey]
   );
+  const introDialogs = useMemo(
+    () => INTRO_ROUNDS.slice(0, introStep + 1).flat(),
+    [introStep]
+  );
+  const introShownDialogs = useMemo(
+    () => introDialogs.slice(0, introVisibleCount),
+    [introDialogs, introVisibleCount]
+  );
+  const introRoundFinished = introVisibleCount >= introDialogs.length;
+
+  useEffect(() => {
+    if (!showIntro) return;
+    let count = introVisibleRef.current;
+    if (count >= introDialogs.length) return;
+    const timer = window.setInterval(() => {
+      count += 1;
+      const next = Math.min(count, introDialogs.length);
+      introVisibleRef.current = next;
+      setIntroVisibleCount(next);
+      if (count >= introDialogs.length) {
+        window.clearInterval(timer);
+      }
+    }, DIALOG_STEP_MS);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [introDialogs.length, showIntro]);
 
   async function enterDaily() {
     if (transitioning || dailyLoading) return;
@@ -154,6 +220,28 @@ export default function HomePage() {
   ) {
     if (transitioning || dailyLoading) return;
     router.push(path);
+  }
+
+  function handleIntroAdvance(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    if (!introRoundFinished) return;
+    setIntroStep((prev) => Math.min(prev + 1, 2));
+  }
+
+  function handleIntroEnter() {
+    if (introStep < 2 || !introRoundFinished || introEntering) return;
+    setIntroEntering(true);
+    window.setTimeout(() => {
+      try {
+        localStorage.setItem(INTRO_SEEN_KEY, "1");
+      } catch {
+        // ignore storage errors
+      }
+      setShowIntro(false);
+      introVisibleRef.current = 0;
+      setIntroVisibleCount(0);
+      setIntroEntering(false);
+    }, 450);
   }
 
   return (
@@ -318,6 +406,52 @@ export default function HomePage() {
           <div className="page-loader" role="status" aria-label="页面加载中">
             <span className="page-loader-spinner" />
           </div>
+        </div>
+      ) : null}
+      {introHydrated && showIntro ? (
+        <div
+          className={styles.introOverlay}
+          onClick={handleIntroEnter}
+          role={introStep >= 2 && introRoundFinished ? "button" : undefined}
+          tabIndex={introStep >= 2 && introRoundFinished ? 0 : -1}
+        >
+          {introEntering ? (
+            <div className={styles.introLoading}>
+              <div className="page-loader" role="status" aria-label="页面加载中">
+                <span className="page-loader-spinner" />
+              </div>
+            </div>
+          ) : (
+            <section className={styles.introPanel}>
+              <div className={styles.introDialogList}>
+                {introShownDialogs.map((dialog, index) => (
+                  <div
+                    key={`${dialog.speaker}-${index}`}
+                    className={`${styles.introDialogItem} ${
+                      dialog.speaker === "你" ? styles.introDialogYou : styles.introDialogKing
+                    }`}
+                  >
+                    <span className={styles.introSpeaker}>{dialog.speaker}</span>
+                    <span className={styles.introText}>{dialog.text}</span>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.introBottomBar}>
+                {introStep < 2 ? (
+                  <button
+                    type="button"
+                    className={styles.introAdvanceBtn}
+                    onClick={handleIntroAdvance}
+                    disabled={!introRoundFinished}
+                  >
+                    ...
+                  </button>
+                ) : (
+                  <p className={styles.introEnterHint}>轻触页面进入韭皇模拟器</p>
+                )}
+              </div>
+            </section>
+          )}
         </div>
       ) : null}
     </div>

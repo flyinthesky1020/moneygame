@@ -1,7 +1,17 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect } from "react";
 import styles from "./page.module.css";
 
 export default function CreditsPage() {
+  useEffect(() => {
+    document.body.classList.add("home-like-body");
+    return () => {
+      document.body.classList.remove("home-like-body");
+    };
+  }, []);
+
   return (
     <div className={`stack ${styles.page}`}>
       <section className={styles.hero}>
