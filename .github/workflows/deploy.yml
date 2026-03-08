@@ -36,19 +36,30 @@ jobs:
           ECS_USER: ${{ secrets.ECS_USER }}
         run: |
           set -euo pipefail
-          ssh -p "$ECS_PORT" "$ECS_USER@$ECS_HOST" 'bash -s' <<'REMOTE'
+          ssh \
+            -o ConnectTimeout=15 \
+            -o ServerAliveInterval=20 \
+            -o ServerAliveCountMax=6 \
+            -o TCPKeepAlive=yes \
+            -p "$ECS_PORT" \
+            "$ECS_USER@$ECS_HOST" 'bash -se' <<'REMOTE'
           set -euo pipefail
           cd /root/game
 
+          echo "[deploy] sync code"
           git fetch --all
           git reset --hard origin/main
 
-          npm ci
+          echo "[deploy] install deps"
+          npm ci --no-audit --no-fund
+          echo "[deploy] build"
           npm run build
 
+          echo "[deploy] restart service"
           pm2 restart game
           pm2 save
 
+          echo "[deploy] health check"
           curl -I --max-time 10 http://127.0.0.1:3000
           curl -I --max-time 10 https://chivesgame.com
           REMOTE
