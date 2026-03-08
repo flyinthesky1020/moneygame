@@ -1,0 +1,54 @@
+name: Deploy Game To ECS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Configure SSH
+        env:
+          ECS_SSH_KEY: ${{ secrets.ECS_SSH_KEY }}
+          ECS_KNOWN_HOSTS: ${{ secrets.ECS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$ECS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$ECS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy on ECS
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_PORT: ${{ secrets.ECS_PORT }}
+          ECS_USER: ${{ secrets.ECS_USER }}
+        run: |
+          set -euo pipefail
+          ssh -p "$ECS_PORT" "$ECS_USER@$ECS_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /root/game
+
+          git fetch --all
+          git reset --hard origin/main
+
+          npm ci
+          npm run build
+
+          pm2 restart game
+          pm2 save
+
+          curl -I --max-time 10 http://127.0.0.1:3000
+          curl -I --max-time 10 https://chivesgame.com
+          REMOTE

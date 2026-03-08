@@ -1,4 +1,4 @@
-# H5 Virtual Trading Game (MVP Skeleton)
+# 韭皇养成计划（H5 MVP Skeleton）
 
 ## 项目简介
 这是一个虚拟股票交易游戏的 H5 项目骨架，用于快速搭建前端结构与依赖。
@@ -8,11 +8,13 @@
 当前版本：`1.5.0`（首页交互优先级、任务引导与成绩历史已更新）。
 
 ## 快速接手索引（新会话优先看这里）
-### 1) 当前状态（2026-03-01）
+### 1) 当前状态（2026-03-08）
 - 模式名称（做题页）：`韭皇练习场`（train）/ `韭皇竞技场`（daily）。
-- 做题页标题与副标题使用手写风字体（见 `globals.css` 的 `.play-mode-title-text`、`.play-mode-subtitle-text`）。
+- 站点页面名称已更新为：`韭皇养成计划`（`src/app/layout.tsx` metadata）。
+- 做题页仅保留主标题（`韭皇练习场 / 韭皇竞技场`），已移除主标题下的小字文案。
 - 做题页顶部指标（进度/总资产/收益率）手机端保持同一行。
 - 做题页背景色与首页一致：`rgb(242, 231, 211)`（`body.play-mode-body`）。
+- 做题页手机端答题按钮（`买入 / 暂且不动`）已改为底部吸附 Bar，适配不同机型与安全区。
 - 结果页背景色与分享页外底一致，采用浅米色纯色底。
 - 做题按钮：`买入`（红）/ `暂且不动`（深蓝）。
 - 涨跌颜色统一规则：`涨红跌绿`（做题页反馈、K线、成交量、MACD、结算海报均已同步）。
@@ -30,12 +32,14 @@
   - 页面左上角提供极简返回主页按钮；
   - 分享图为手写卡片风，支持一键保存；
   - 左下角展示昵称、日期与扫码引导文案；
-  - 右下角展示二维码（当前指向 `www.baidu.com`）；
+  - 右下角展示二维码（当前指向 `chivesgame.com`）；
+  - 手机端“保存图片”按钮文案为“保存到相册”，优先触发系统保存/分享流程，失败时回退下载；
   - 图表下方文案按收益结果从三组配置文案中稳定随机；
   - 文案作者在文案末行下方右对齐显示；
   - 右上角勋章按总收益率分为 5 档：`技术的神 / 盈利者 / 平淡是福 / 亏损者 / 你就是韭皇`。
 - 首页：
   - 采用 `390x844` 固定舞台等比缩放，保证不同手机机型完整显示全部元素；
+  - 首页舞台圆角已移除，避免在部分手机出现黑色边角；
   - 右侧三个入口按钮已改为纯 CSS 手绘纸质按钮，不再依赖按钮素材图；
   - `character_daily` 增加轻微呼吸/漂浮动效；
   - `leaderboard` 区域可点击进入排行榜页面；
@@ -58,7 +62,6 @@
     - 第一行：昵称、模式、结算时间（精确到分钟）
     - 第二行：收益率、盈利天数、亏损天数、未开仓天数
 - 交互文案配置：
-  - 做题页随机金句：`/Users/haitao/Documents/Newproject/src/lib/playQuotes.ts`
   - 每题反馈规则与文案：`/Users/haitao/Documents/Newproject/src/lib/playRoundFeedback.ts`
   - 分享图随机文案与作者：`/Users/haitao/Documents/Newproject/src/lib/sharePosterQuotes.ts`
   - 首页任务配置：`/Users/haitao/Documents/Newproject/src/lib/homeTaskConfig.ts`
@@ -233,10 +236,11 @@
   - `play` 页完成价格K线主图 + 指标副图（支持 `成交量 / MACD / KDJ` 切换）渲染
   - `play` 页与结算页采用统一涨跌配色：`涨红跌绿`
   - `play` 页答题为二选一：`买入` 与 `暂且不动`，无默认选中，点击即提交
+  - `play` 页手机端答题按钮吸附在底部 Bar（适配安全区与不同机型）
   - `play` 页顶部显示进度、当前总资产、当前收益率
-  - `play` 页模式标题：`韭皇练习场` / `韭皇竞技场`（手写风）
+  - `play` 页模式标题：`韭皇练习场` / `韭皇竞技场`（手写风），已移除标题下小字
   - 最后一题后要求输入昵称，再调用 `finish` 并跳转 `result/[runId]`
-  - `result` 页展示手写风结算海报，并提供保存图片按钮
+  - `result` 页展示手写风结算海报；手机端“保存到相册”优先走系统保存/分享，失败回退下载
   - `result` 页左上角提供返回主页按钮
   - `leaderboard` 页调用 `/api/leaderboard` 展示当日 Top100（按记录排序，不按用户去重）
   - 排行榜玩家名使用稳定随机金融学者昵称映射
@@ -370,7 +374,9 @@ export function getSingaporeDateKey(date = new Date()): string {
   - 页面展示文件：`src/app/profile/page.tsx`
 - 做题页仅保留两个选择：`买入` 与 `暂且不动`。
 - 做题页每题默认无选中态；点击任一选项即提交，不再需要“提交答案”确认按钮。
+- 做题页手机端按钮区采用底部吸附 Bar（含 `safe-area-inset-bottom`）。
 - 做题页顶部显示：进度、当前总资产、当前收益率（不再显示 mode）。
+- 做题页已移除模式标题下的小字文案。
 - 做题页背景色与首页一致：`rgb(242, 231, 211)`。
 - 模式标题文案：
   - `train -> 韭皇练习场`
@@ -418,6 +424,152 @@ export function getSingaporeDateKey(date = new Date()): string {
 ## 环境变量说明
 - `NEXT_PUBLIC_SUPABASE_URL`：Supabase 项目 URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`：Supabase 匿名公钥
+
+## 云服务器更新发布（阿里云 ECS + PM2 + Caddy）
+以下流程用于你后续“本地改完代码后，把线上游戏更新到服务器”。
+
+### 零、推荐改造：Push 到 GitHub 后自动发布到服务器
+本仓库已新增工作流文件：`.github/workflows/deploy.yml`。  
+当你 `push` 到 `main` 分支时，会自动在服务器执行：
+- `git fetch --all && git reset --hard origin/main`
+- `npm ci && npm run build`
+- `pm2 restart game && pm2 save`
+
+#### 第一步：在服务器上准备 GitHub Actions 专用 SSH 公钥
+1. 在你的本地电脑执行（生成一对新密钥，专门给 GitHub Actions 用）：
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/game_deploy_github -C "github-actions-deploy"
+```
+
+2. 把公钥追加到服务器（按提示输入 root 密码）：
+```bash
+ssh-copy-id -i ~/.ssh/game_deploy_github.pub root@8.166.136.17
+```
+
+3. 验证新密钥可登录：
+```bash
+ssh -i ~/.ssh/game_deploy_github -p 22 root@8.166.136.17
+```
+
+#### 第二步：获取服务器 SSH 指纹（known_hosts）
+在本地执行：
+```bash
+ssh-keyscan -p 22 8.166.136.17
+```
+记下输出整行内容（示例格式：`8.166.136.17 ssh-ed25519 AAAA...`），后面要放进 GitHub Secret。
+
+#### 第三步：在 GitHub 仓库配置 Secrets
+进入 GitHub 仓库页面：`Settings -> Secrets and variables -> Actions -> New repository secret`，新增以下 5 个：
+
+1. `ECS_HOST` = `8.166.136.17`
+2. `ECS_PORT` = `22`
+3. `ECS_USER` = `root`
+4. `ECS_SSH_KEY` = `~/.ssh/game_deploy_github` 私钥全文（包含 `BEGIN/END OPENSSH PRIVATE KEY`）
+5. `ECS_KNOWN_HOSTS` = 上一步 `ssh-keyscan` 输出整行
+
+#### 第四步：推送工作流并做首次验证
+```bash
+git add .github/workflows/deploy.yml README.md
+git commit -m "ci: auto deploy to ecs on push main"
+git push origin main
+```
+
+然后到 GitHub 仓库 `Actions` 页面查看 `Deploy Game To ECS` 是否成功。
+
+#### 第五步：日常发布方式（以后就这样）
+你只要正常开发并 push 到 `main`：
+```bash
+git add .
+git commit -m "feat: your change"
+git push origin main
+```
+GitHub 会自动把服务器更新到最新版本。
+
+### 一、前提（只需确认）
+- 服务器目录：`/root/game`
+- 进程管理：`pm2`，进程名：`game`
+- 反向代理：`caddy`
+- 线上域名：`chivesgame.com`
+
+### 二、标准更新步骤（每次发布都按这个来）
+1. 登录服务器：
+```bash
+ssh root@8.166.136.17
+```
+
+2. 进入项目并拉取最新代码：
+```bash
+cd /root/game
+git fetch --all
+git pull origin main
+```
+
+3. 安装依赖（仅当 `package.json` 或 lock 文件有变更时必须执行）：
+```bash
+npm ci
+```
+
+4. 生产构建：
+```bash
+npm run build
+```
+
+5. 用 PM2 重启线上服务：
+```bash
+pm2 restart game
+pm2 save
+pm2 status
+```
+
+6. 自检（必须）：
+```bash
+curl -I http://127.0.0.1:3000
+curl -I http://chivesgame.com
+curl -vk https://chivesgame.com
+```
+
+7. 浏览器实测：
+- `https://chivesgame.com`
+- 首页能打开、`/train` 和 `/daily` 能正常开始
+
+### 三、常用运维命令
+```bash
+# 查看 PM2 日志
+pm2 logs game --lines 100
+
+# 查看 Caddy 状态
+systemctl status caddy
+
+# 查看 Caddy 最近日志
+journalctl -u caddy -n 100 --no-pager
+
+# 跟随 Caddy 实时日志
+journalctl -u caddy -f
+```
+
+### 四、快速回滚（本次更新异常时）
+```bash
+cd /root/game
+git log --oneline -n 5
+git reset --hard <上一个可用提交SHA>
+npm ci
+npm run build
+pm2 restart game
+pm2 save
+```
+
+### 五、微信内打不开但 Safari 可打开（高频问题）
+- 若出现微信内打不开、Safari 正常，优先检查中国内地站点合规（ICP备案/接入）与 DNS 生效状态。
+- 先查域名解析：
+```bash
+dig chivesgame.com A +short @1.1.1.1
+dig chivesgame.com A +short @8.8.8.8
+```
+- `Caddy` 日志里若出现 `NXDOMAIN`，说明公网 DNS 还未生效或配置未生效，先修复解析后再重启 `caddy`：
+```bash
+systemctl restart caddy
+journalctl -u caddy -n 80 --no-pager
+```
 
 ## 未来阶段约束（重要安全规则）
 - 前端永远不能获得第 61 根 K 线数据。
